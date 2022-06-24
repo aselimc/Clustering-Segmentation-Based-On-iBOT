@@ -3,8 +3,7 @@ import torch
 import torch.nn as nn
 
 import torchvision.datasets as datasets
-import torchvision.transforms as transforms
-from transforms import PILToTensor, CenterCrop
+from transforms import *
 from torch.utils.data import DataLoader
 
 import models
@@ -28,16 +27,15 @@ def train(args):
     state_dict = torch.load(args.weights)['state_dict']
     backbone.load_state_dict(state_dict)
     
-    train_transform = transforms.Compose([
-        CenterCrop(224),
-        PILToTensor()
-        #transforms.RandomResizedCrop(224),
-        #transforms.ToTensor()
-        #transforms.RandomHorizontalFlip(),
-        #transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+    train_transform = Compose([
+        RandomCrop(224),
+        PILToTensor(),
+        MergeContours(),
+        RandomHorizontalFlip(),
+        Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
     ])
 
-    dataset = datasets.VOCSegmentation(root=args.root, image_set='val', download=False, transform=train_transform)
+    dataset = datasets.VOCSegmentation(root=args.root, image_set='val', download=False, transforms=train_transform)
     loader = DataLoader(dataset, batch_size=16)
 
     for img, segmentation in loader:
