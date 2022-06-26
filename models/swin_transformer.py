@@ -20,7 +20,7 @@ import torch.distributed as dist
 
 from math import sqrt
 from functools import partial
-from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+# from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 from timm.models.registry import register_model
 
 class Mlp(nn.Module):

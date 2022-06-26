@@ -6,7 +6,6 @@ from torchvision import transforms as T
 from torchvision.transforms import functional as F
 
 
-# https://github.com/pytorch/vision/blob/main/references/segmentation/transforms.py
 def pad_if_smaller(img, size, fill=0):
     min_size = min(img.size)
     if min_size < size:
@@ -42,6 +41,7 @@ class RandomResize:
 
 
 class RandomHorizontalFlip:
+
     def __init__(self, flip_prob=0.5):
         self.flip_prob = flip_prob
 
@@ -107,3 +107,4 @@ class Normalize:
     def __call__(self, image, target):
         image = F.normalize(image, mean=self.mean, std=self.std)
         return image, target
+
