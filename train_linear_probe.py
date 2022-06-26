@@ -6,7 +6,6 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from transforms import *
 from torch.utils.data import DataLoader
-from PIL import Image
 import models
 
 
@@ -39,23 +38,31 @@ def main(args):
     state_dict = torch.load(args.weights)['state_dict']
     backbone.load_state_dict(state_dict)
     
+        
     for param in backbone.parameters():
-    param.requires_grad = False
+        param.requires_grad = False
 
     train_transform = Compose([
         RandomCrop(224),
         PILToTensor(),
         MergeContours(),
         RandomHorizontalFlip(),
-        Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+        Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
     ])
-
-
-    dataset = datasets.VOCSegmentation(root=args.root, image_set='train', download=False, transforms=train_transform)
-    loader = DataLoader(dataset, batch_size=16)
     flatten = nn.Flatten()
     linear = nn.Linear(75648,20 )
+
+
+
+    for param in backbone.parameters():
+        param.requires_grad = False
+        
     model = nn.Sequential(backbone, flatten, linear)
+    optimizer = torch.optim.AdamW(model.parameters())
+    loss = nn.CrossEntropyLoss()
+    dataset = datasets.VOCSegmentation(root=args.root, image_set='train', download=False, transforms=train_transform)
+    loader = DataLoader(dataset, batch_size=16)
+
     for epoch in args.epochs:
         train(loader, model)
 
