@@ -4,16 +4,16 @@ import torch.nn as nn
 
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-from transforms import PILToTensor, CenterCrop
+from transforms import PILToTensor, RandomCrop, Compose
 from torch.utils.data import DataLoader
-
+from PIL import Image
 import models
 
 
 def parser_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--root')
-    parser.add_argument('--weights')
+    parser.add_argument('--root', default="data")
+    parser.add_argument('--weights', default="weights/ViT-S16.pth")
     parser.add_argument('--arch', default="vit_small")
     parser.add_argument('--patch_size', default=16)
 
@@ -28,23 +28,30 @@ def train(args):
     state_dict = torch.load(args.weights)['state_dict']
     backbone.load_state_dict(state_dict)
     
-    train_transform = transforms.Compose([
-        CenterCrop(224),
+    train_transform = Compose([
+        RandomCrop(224),
         PILToTensor()
-        #transforms.RandomResizedCrop(224),
-        #transforms.ToTensor()
-        #transforms.RandomHorizontalFlip(),
-        #transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
     ])
 
-    dataset = datasets.VOCSegmentation(root=args.root, image_set='val', download=False, transform=train_transform)
-    loader = DataLoader(dataset, batch_size=16)
+    for param in backbone.parameters():
+        param.requires_grad = False
 
+    dataset = datasets.VOCSegmentation(root=args.root, image_set='train', download=False, transforms=train_transform)
+    loader = DataLoader(dataset, batch_size=16)
+    flatten = nn.Flatten()
+    linear = nn.Linear(75648,20 )
     for img, segmentation in loader:
         out = backbone(img)
+        out = flatten(out)
+        out = linear(out)
 
         print(out.shape)
 
+def show_img(img, segmentation):
+    img_pil = transforms.functional.to_pil_image(img)
+    seg_pil = transforms.functional.to_pil_image(segmentation)
+    img_pil.show()
+    seg_pil.show()
 
 if __name__ == '__main__':
     args = parser_args()
