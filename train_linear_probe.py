@@ -19,7 +19,18 @@ def parser_args():
 
     return parser.parse_args()
 
-def train(args):
+def train(loader, model):
+    
+    for img, segmentation in loader:
+        out = model(img)
+        out = model(out)
+        out = model(out)
+
+        print(out.shape)
+
+def main(args):
+
+    # Loading the backbone
     backbone = models.__dict__[args.arch](
         patch_size=args.patch_size,
         return_all_tokens=True,
@@ -40,12 +51,10 @@ def train(args):
     loader = DataLoader(dataset, batch_size=16)
     flatten = nn.Flatten()
     linear = nn.Linear(75648,20 )
-    for img, segmentation in loader:
-        out = backbone(img)
-        out = flatten(out)
-        out = linear(out)
+    model = nn.Sequential(backbone, flatten, linear)
+    for epoch in args.epochs:
+        train(loader, model)
 
-        print(out.shape)
 
 def show_img(img, segmentation):
     img_pil = transforms.functional.to_pil_image(img)
@@ -55,4 +64,4 @@ def show_img(img, segmentation):
 
 if __name__ == '__main__':
     args = parser_args()
-    train(args)
+    main(args)
