@@ -77,7 +77,7 @@ class CenterCrop:
 
 class MergeContours:
     def __call__(self, image, target):
-        contours = torch.logical_or((target != 0.0), (target != 1.0))
+        contours = (target == 255)
         target[contours] = 1.0
 
         return image, target
@@ -86,7 +86,7 @@ class MergeContours:
 class PILToTensor:
     def __call__(self, image, target):
         image = F.pil_to_tensor(image) / 255.0
-        target = torch.as_tensor(np.array(target), dtype=torch.uint8)
+        target = torch.as_tensor(np.array(target), dtype=torch.float32)
         return image, target
 
 
