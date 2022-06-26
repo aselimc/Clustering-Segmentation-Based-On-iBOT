@@ -41,7 +41,8 @@ class RandomResize:
 
 
 class RandomHorizontalFlip:
-    def __init__(self, flip_prob):
+
+    def __init__(self, flip_prob=0.5):
         self.flip_prob = flip_prob
 
     def __call__(self, image, target):
@@ -74,9 +75,17 @@ class CenterCrop:
         return image, target
 
 
+class MergeContours:
+    def __call__(self, image, target):
+        contours = torch.logical_or((target != 0.0), (target != 1.0))
+        target[contours] = 1.0
+
+        return image, target
+
+
 class PILToTensor:
     def __call__(self, image, target):
-        image = F.pil_to_tensor(image) /255.0
+        image = F.pil_to_tensor(image) / 255.0
         target = torch.as_tensor(np.array(target), dtype=torch.uint8)
         return image, target
 
@@ -98,3 +107,4 @@ class Normalize:
     def __call__(self, image, target):
         image = F.normalize(image, mean=self.mean, std=self.std)
         return image, target
+
