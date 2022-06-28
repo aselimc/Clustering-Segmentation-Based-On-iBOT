@@ -4,6 +4,7 @@ import torch.nn as nn
 
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
+import torch.nn.functional as Fun
 from tqdm import tqdm
 from transforms import *
 from torch.utils.data import DataLoader
@@ -34,10 +35,8 @@ def train(loader, backbone, classifier, criterion, optimizer, n_blocks):
         segmentation = segmentation.cuda()
         with torch.no_grad():
             intermediate_output = backbone.get_intermediate_layers(img, n_blocks)
-            output = torch.cat([x[:, 0] for x in intermediate_output], dim=-1).detach()
+            output = torch.cat([x[:, 1:] for x in intermediate_output], dim=-1).detach()
         linear_output= classifier(output)
-        #linear_output = torch.flatten(linear_output, start_dim=1)
-        #segmentation = torch.flatten(segmentation, start_dim=1)
 
         loss = criterion(linear_output, segmentation.long())
         loss.backward()
@@ -45,6 +44,21 @@ def train(loader, backbone, classifier, criterion, optimizer, n_blocks):
         loss_l.append(loss.item())
         progress_bar.update()
     return np.mean(np.array(loss_l))
+    
+class ConvLinearClassifier(nn.Module):
+    def __init__(self, embed_dim, n_classes):
+        super().__init__()
+        self.n_classes = n_classes
+        self.conv1 = nn.Conv2d(in_channels=embed_dim, out_channels=n_classes, kernel_size=1)
+        self.flatten = nn.Flatten()
+
+    def forward(self,x):
+        bs, _, ch= x.shape
+        x =  x.view(bs,ch, 14, 14)
+        x = self.conv1(x)
+        x = Fun.interpolate(x, size=[224, 224], mode="bilinear")
+        return x
+
 
 class LinearClassifier(nn.Module):
     def __init__(self, dim, num_classes=22, img_size=224) :
@@ -87,7 +101,7 @@ def main(args):
     ])
     n_blocks = args.n_blocks
     embed_dim = backbone.embed_dim * n_blocks
-    classifier = LinearClassifier(embed_dim, img_size=224).cuda()
+    classifier = ConvLinearClassifier(embed_dim, n_classes=22).cuda()
     optimizer = torch.optim.AdamW(classifier.parameters())
 
     for param in backbone.parameters():
