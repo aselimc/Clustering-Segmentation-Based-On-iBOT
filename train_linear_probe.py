@@ -1,4 +1,5 @@
 import argparse
+from random import shuffle
 from gpg import Data
 import torch
 import torch.nn as nn
@@ -13,25 +14,29 @@ from tqdm import tqdm
 from transforms import *
 from torch.utils.data import DataLoader
 import models
+from torch.utils.tensorboard import SummaryWriter
 
+global_step = 0
 
 def parser_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', default="data")
     parser.add_argument('--weights', default="weights/ViT-S16.pth")
     parser.add_argument('--arch', default="vit_small")
-    parser.add_argument('--patch_size', default=16)
-    parser.add_argument('--epochs', default=1000)
+    parser.add_argument('--patch_size', default=8)
+    parser.add_argument('--epochs', default=500)
     parser.add_argument('--n_blocks', default=4)
     parser.add_argument('--batch_size', default=16)
     parser.add_argument("--init_lr", default=1e-3)
     parser.add_argument("--min_lr", default=1e-5)
     parser.add_argument("--percentage", default=0.1)
+    parser.add_argument("--log_folder", default="logs/")
     
 
     return parser.parse_args()
 
-def train(loader, backbone, classifier, criterion, optimizer, n_blocks, scheduler, epoch):
+def train(loader, backbone, classifier, criterion, optimizer, n_blocks, scheduler):
+    global global_step
     backbone.eval()
     loss_l = []
 
@@ -49,19 +54,20 @@ def train(loader, backbone, classifier, criterion, optimizer, n_blocks, schedule
         loss.backward()
         optimizer.step()
         scheduler.step()
-
         loss_l.append(loss.item())
         progress_bar.update()
+        global_step += 1
     return np.mean(np.array(loss_l))
 
 
-def validate(loader, backbone, classifier, criterion, n_blocks):
+def validate(loader, backbone, classifier, criterion, n_blocks, logger):
     backbone.eval()
     classifier.eval()
     val_loss = []
     miou_arr = []
+    random_pic_select = np.random.randint(len(loader))
     with torch.no_grad():
-        for img, segmentation in enumerate(loader):
+        for idx , (img, segmentation) in enumerate(loader):
             img = img.cuda()
             segmentation = segmentation.cuda()
             intermediate_output = backbone.get_intermediate_layers(img, n_blocks)
@@ -70,7 +76,13 @@ def validate(loader, backbone, classifier, criterion, n_blocks):
             loss = criterion(linear_output, segmentation.long())
             val_loss.append(loss.item())
             miou = mIoU(linear_output,segmentation)
-            miou_arr.append(miou)
+            miou_arr.append(miou.item())
+            if random_pic_select==idx:
+                print("Adding Image Example to Logger")
+                logger.add_image("gt_image", img[0], global_step)
+                logger.add_image("pred_image", torch.argmax(linear_output, dim=1), global_step)
+                logger.add_image("gt_segmentation", segmentation, global_step)
+
     return np.mean(np.array(miou_arr)), np.mean(np.array(val_loss))
 
 class ConvLinearClassifier(nn.Module):
@@ -89,6 +101,8 @@ class ConvLinearClassifier(nn.Module):
 
 
 def main(args):
+    
+    logger = SummaryWriter(args.log_folder)
 
     # Loading the backbone
     backbone = models.__dict__[args.arch](
@@ -135,19 +149,26 @@ def main(args):
     ############## TRAINING LOOP #######################
 
     for epoch in range(args.epochs):
-        mean_loss = train(train_loader, backbone, classifier, criterion, optimizer, n_blocks, lr_scheduler, epoch)
+        mean_loss = train(train_loader, backbone, classifier, criterion, optimizer, n_blocks, lr_scheduler)
         print(f"For epoch number {epoch} --> Average Loss {mean_loss:.2f}")
+        logger.add_scalar("training_loss", mean_loss, global_step)
+        if epoch % 10 == 0:
+            miou, loss = validate(val_loader, backbone, classifier, criterion, n_blocks, logger)
+            print(f"Validation for epoch {epoch}: Average mIoU {miou}, Average Loss {loss}")
+            logger.add_scalar("val_loss", loss, global_step)
+            logger.add_scalar("val_miou", miou, global_step)
+        if epoch == 55:
+            x = 3
 
 def cosine_scheduler(base_value, final_value, epochs, niter_per_ep, warmup_epochs=0, start_warmup_value=0):
     iters = np.arange(epochs * niter_per_ep)
     schedule = final_value + 0.5 * (base_value - final_value) * (1 + np.cos(np.pi * iters / len(iters)))
     return schedule
 
-def show_img(img, segmentation):
+def show_img(img):
     img_pil = transforms.functional.to_pil_image(img)
-    img_pil.show()
-    seg_pil = transforms.functional.to_pil_image(segmentation)
-    seg_pil.show()
+    img_pil.save("dum1.png")
+
 
 if __name__ == '__main__':
     args = parser_args()

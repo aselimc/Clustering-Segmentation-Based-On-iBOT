@@ -78,7 +78,7 @@ class CenterCrop:
 class MergeContours:
     def __call__(self, image, target):
         contours = (target == 255)
-        target[contours] = 21
+        target[contours] = 0
 
         return image, target
 
