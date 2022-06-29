@@ -17,9 +17,9 @@ def parser_args():
     parser.add_argument('--weights', default="weights/ViT-S16.pth")
     parser.add_argument('--arch', default="vit_small")
     parser.add_argument('--patch_size', default=16)
-    parser.add_argument('--epochs', default=100)
+    parser.add_argument('--epochs', default=1000)
     parser.add_argument('--n_blocks', default=4)
-    parser.add_argument('--batch_size', default=2)
+    parser.add_argument('--batch_size', default=96)
     
 
     return parser.parse_args()
@@ -50,13 +50,13 @@ class ConvLinearClassifier(nn.Module):
         super().__init__()
         self.n_classes = n_classes
         self.conv1 = nn.Conv2d(in_channels=embed_dim, out_channels=n_classes, kernel_size=1)
-        self.flatten = nn.Flatten()
 
     def forward(self,x):
-        bs, _, ch= x.shape
-        x =  x.view(bs,ch, 14, 14)
+        bs, h_sqrt , ch= x.shape
+        h = int(np.sqrt(h_sqrt))
+        x =  x.view(bs,ch, h, h)
         x = self.conv1(x)
-        x = Fun.interpolate(x, size=[224, 224], mode="bilinear")
+        x = Fun.interpolate(x, size=[224, 224], mode="bilinear", align_corners=True)
         return x
 
 
