@@ -92,8 +92,7 @@ def validate(loader, backbone, classifier, criterion, n_blocks):
     classifier.eval()
     val_loss = []
     miou_arr = []
-    #random_pic_select = np.random.randint(len(loader))
-    random_pic_select = 1
+    random_pic_select = np.random.randint(len(loader))
     with torch.no_grad():
         for idx , (img, segmentation) in enumerate(loader):
             img = img.cuda()
