@@ -166,7 +166,7 @@ def main(args):
     )
 
     state_dict = torch.load(args.weights)['state_dict']
-    #backbone.load_state_dict(state_dict)
+    backbone.load_state_dict(state_dict)
     backbone = backbone.cuda()
     
         
