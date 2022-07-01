@@ -905,6 +905,8 @@ def mIoU(logits, gt, threshold=0.5):
 
 class MaskedCrossEntropyLoss(nn.Module):
     def __init__(self, mask_val=255):
+        super(MaskedCrossEntropyLoss, self).__init__()
+        
         self.mask_val = mask_val
         self.ce_loss = nn.CrossEntropyLoss(reduction='none')
     
