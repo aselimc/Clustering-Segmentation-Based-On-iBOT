@@ -41,7 +41,7 @@ CLASS_LABELS = {
     18: "sofa",
     19: "train",
     20: "tvmonitor",
-    255: "contours"
+    21: "contours"
 }
 
 global_step = 0
@@ -75,8 +75,12 @@ def train(loader, backbone, classifier, criterion, optimizer, n_blocks):
             output = torch.cat([x[:, 1:] for x in intermediate_output], dim=-1).detach()
         pred_logits = classifier(output)
 
+        # mask contours: compute pixelwise dummy entropy loss then set it to 0.0
+        contours = (segmentation == 255)
+        segmentation[contours] = 0
+
         loss = criterion(pred_logits, segmentation.long())
-        loss[segmentation==255.0] = 0.0
+        loss[contours] = 0.0
         loss = loss.sum() / loss.numel()
         loss.backward()
         optimizer.step()
@@ -102,8 +106,12 @@ def validate(loader, backbone, classifier, criterion, n_blocks):
             output = torch.cat([x[:, 1:] for x in intermediate_output], dim=-1).detach()
         pred_logits = classifier(output)
 
+        # mask contours: compute pixelwise dummy entropy loss then set it to 0.0
+        contours = (segmentation == 255)
+        segmentation[contours] = 0
+
         loss = criterion(pred_logits, segmentation.long())
-        loss[segmentation==255.0] = 0.0
+        loss[contours] = 0.0
         loss = loss.sum() / loss.numel()
 
         val_loss.append(loss.item())
