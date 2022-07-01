@@ -41,7 +41,7 @@ CLASS_LABELS = {
     18: "sofa",
     19: "train",
     20: "tvmonitor",
-    21: "contours"
+    255: "contours"
 }
 
 global_step = 0
@@ -77,11 +77,12 @@ def train(loader, backbone, classifier, criterion, optimizer, n_blocks):
 
         # mask contours: compute pixelwise dummy entropy loss then set it to 0.0
         contours = (segmentation == 255)
+        num_contour_pixels = contours.sum()
         segmentation[contours] = 0
 
         loss = criterion(pred_logits, segmentation.long())
         loss[contours] = 0.0
-        loss = loss.sum() / loss.numel()
+        loss = loss.sum() / (loss.numel() - num_contour_pixels)
         loss.backward()
         optimizer.step()
 
@@ -108,11 +109,12 @@ def validate(loader, backbone, classifier, criterion, n_blocks):
 
         # mask contours: compute pixelwise dummy entropy loss then set it to 0.0
         contours = (segmentation == 255)
+        num_contour_pixels = contours.sum()
         segmentation[contours] = 0
 
         loss = criterion(pred_logits, segmentation.long())
         loss[contours] = 0.0
-        loss = loss.sum() / loss.numel()
+        loss = loss.sum() / (loss.numel() - num_contour_pixels)
 
         val_loss.append(loss.item())
         miou = mIoU(pred_logits, segmentation)
@@ -140,6 +142,7 @@ def validate(loader, backbone, classifier, criterion, n_blocks):
                 step=global_step)
 
     return np.mean(np.array(miou_arr)), np.mean(np.array(val_loss))
+
 
 class ConvLinearClassifier(nn.Module):
     def __init__(self, embed_dim, n_classes):
