@@ -901,3 +901,20 @@ def mIoU(logits, gt, threshold=0.5):
     intersection = ((pred == 1) & (gt == 1)).sum().float()
     union = ((pred == 1) | (gt == 1)).sum().float()
     return intersection/(union+1.)
+
+
+class MaskedCrossEntropyLoss(nn.Module):
+    def __init__(self, mask_val=255):
+        self.mask_val = mask_val
+        self.ce_loss = nn.CrossEntropyLoss(reduction='none')
+    
+    def forward(self, input, target):
+        mask = (target == self.mask_val)
+        num_mask_el = mask.sum()
+        target[mask] = 0
+
+        loss = self.ce_loss(input, target.long())
+        loss[mask] = 0.0
+        loss = loss.sum() / (loss.numel() - num_mask_el)
+
+        return loss

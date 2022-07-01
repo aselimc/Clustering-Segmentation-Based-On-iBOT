@@ -7,7 +7,7 @@ import torch.optim as optim
 import wandb
 
 
-from utils import mIoU
+from utils import mIoU, MaskedCrossEntropyLoss
 from dataloader import PartialDatasetVOC
 from torchvision import datasets
 import torchvision.transforms as transforms
@@ -75,14 +75,7 @@ def train(loader, backbone, classifier, criterion, optimizer, n_blocks):
             output = torch.cat([x[:, 1:] for x in intermediate_output], dim=-1).detach()
         pred_logits = classifier(output)
 
-        # mask contours: compute pixelwise dummy entropy loss then set it to 0.0
-        contours = (segmentation == 255)
-        num_contour_pixels = contours.sum()
-        segmentation[contours] = 0
-
-        loss = criterion(pred_logits, segmentation.long())
-        loss[contours] = 0.0
-        loss = loss.sum() / (loss.numel() - num_contour_pixels)
+        loss = criterion(pred_logits, segmentation)
         loss.backward()
         optimizer.step()
 
@@ -108,14 +101,7 @@ def validate(loader, backbone, classifier, criterion, n_blocks):
         pred_logits = classifier(output)
 
         # mask contours: compute pixelwise dummy entropy loss then set it to 0.0
-        contours = (segmentation == 255)
-        num_contour_pixels = contours.sum()
-        segmentation[contours] = 0
-
-        loss = criterion(pred_logits, segmentation.long())
-        loss[contours] = 0.0
-        loss = loss.sum() / (loss.numel() - num_contour_pixels)
-
+        loss = criterion(pred_logits, segmentation)
         val_loss.append(loss.item())
         miou = mIoU(pred_logits, segmentation)
         miou_arr.append(miou.item())
@@ -217,7 +203,7 @@ def main(args):
     )
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=0)
 
-    criterion = nn.CrossEntropyLoss(reduction='none')
+    criterion = MaskedCrossEntropyLoss()
 
     ############## TRAINING LOOP #######################
 
