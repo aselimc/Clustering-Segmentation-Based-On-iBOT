@@ -10,10 +10,9 @@ import wandb
 from utils import mIoU, MaskedCrossEntropyLoss
 from dataloader import PartialDatasetVOC
 from torchvision import datasets
-import torchvision.transforms as transforms
 import torch.nn.functional as Fun
 from tqdm import tqdm
-from transforms import *
+import transforms as _transforms
 from torch.utils.data import DataLoader
 import models
 from models.classifier import ConvLinearClassifier
@@ -159,8 +158,7 @@ def main(args):
     state_dict = torch.load(args.weights)['state_dict']
     backbone.load_state_dict(state_dict)
     backbone = backbone.cuda()
-    
-        
+
     for param in backbone.parameters():
         param.requires_grad = False
 
@@ -169,16 +167,22 @@ def main(args):
     classifier = ConvLinearClassifier(embed_dim, n_classes=21, upsample_mode=args.upsample).cuda()
 
     ## TRAINING DATASET ##
-    train_transform = Compose([
-        RandomCrop(224),
-        PILToTensor(),
-        RandomHorizontalFlip(),
-        Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+    train_transform = _transforms.Compose([
+        _transforms.RandomResizedCrop(224),
+        _transforms.RandomHorizontalFlip(),
+        _transforms.ToTensor(),
+        _transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+    ])
+    val_transform = _transforms.Compose([
+        _transforms.Resize(256, interpolation=_transforms.INTERPOLATION_BICUBIC),
+        _transforms.CenterCrop(224),
+        _transforms.ToTensor(),
+        _transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
     ])
 
     train_dataset = PartialDatasetVOC(percentage = args.percentage, root=args.root, image_set='train', download=False, transforms=train_transform)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size)
-    val_dataset = datasets.VOCSegmentation(root=args.root, image_set='val', download=False, transforms=train_transform)
+    val_dataset = datasets.VOCSegmentation(root=args.root, image_set='val', download=False, transforms=val_transform)
     val_loader = DataLoader(val_dataset, batch_size=1)
 
     optimizer = optim.SGD(
@@ -206,15 +210,6 @@ def main(args):
             })
         
         lr_scheduler.step()
-
-def cosine_scheduler(base_value, final_value, epochs, niter_per_ep, warmup_epochs=0, start_warmup_value=0):
-    iters = np.arange(epochs * niter_per_ep)
-    schedule = final_value + 0.5 * (base_value - final_value) * (1 + np.cos(np.pi * iters / len(iters)))
-    return schedule
-
-def show_img(img):
-    img_pil = transforms.functional.to_pil_image(img)
-    img_pil.save("dum1.png")
 
 
 if __name__ == '__main__':
