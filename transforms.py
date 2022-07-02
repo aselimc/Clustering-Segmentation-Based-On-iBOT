@@ -186,3 +186,13 @@ class Normalize:
         image = F.normalize(image, mean=self.mean, std=self.std)
         return image, target
 
+
+class ToBinaryMask:
+    def __call__(self, image, target):
+        foreground = (target != 0)
+        contours = (target == 255)
+
+        target[foreground] = 1
+        target[contours] = 255
+
+        return image, target

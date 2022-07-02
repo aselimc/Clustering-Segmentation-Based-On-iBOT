@@ -4,7 +4,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import wandb
 
 
 from utils import mIoU, MaskedCrossEntropyLoss
@@ -13,36 +12,11 @@ from torchvision import datasets
 import torch.nn.functional as Fun
 from tqdm import tqdm
 import transforms as _transforms
+from logger import WBLogger
 from torch.utils.data import DataLoader
 import models
 from models.classifier import ConvLinearClassifier
-from torch.utils.tensorboard import SummaryWriter
 
-
-CLASS_LABELS = {
-    0: "background",
-    1: "aeroplane",
-    2: "bicycle",
-    3: "bird",
-    4: "boat",
-    5: "bottle",
-    6: "bus",
-    7: "car",
-    8: "cat",
-    9: "chair",
-    10: "cow",
-    11: "diningtable",
-    12: "dog",
-    13: "horse",
-    14: "motorbike",
-    15: "person",
-    16: "pottedplant",
-    17: "sheep",
-    18: "sofa",
-    19: "train",
-    20: "tvmonitor",
-    255: "contours"
-}
 
 global_step = 0
 
@@ -58,16 +32,18 @@ def parser_args():
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--percentage", type=float, default=0.1)
     parser.add_argument("--upsample", type=str, choices=['nearest', 'bilinear'], default='nearest')
+    parser.add_argument("--segmentation", type=str, choices=['binary', 'multi'], default='multi')
+    parser.add_argument("--eval_freq", type=int, default=5)
 
     return parser.parse_args()
 
-def train(loader, backbone, classifier, criterion, optimizer, n_blocks):
+def train(loader, backbone, classifier, logger, criterion, optimizer, n_blocks):
     global global_step
     backbone.eval()
     loss_l = []
 
     progress_bar = tqdm(total=len(loader))
-    for img, segmentation in loader:
+    for it, (img, segmentation) in enumerate(loader):
         optimizer.zero_grad()
         img = img.cuda()
         segmentation = segmentation.cuda()
@@ -81,13 +57,16 @@ def train(loader, backbone, classifier, criterion, optimizer, n_blocks):
         optimizer.step()
 
         loss_l.append(loss.item())
+        if it % 10 == 0:
+            logger.log_scalar({"training_loss": loss.item()}, step=global_step)
+
         progress_bar.update()
         global_step += 1
 
     return np.mean(np.array(loss_l))
 
 
-def validate(loader, backbone, classifier, criterion, n_blocks):
+def validate(loader, backbone, classifier, logger, criterion, n_blocks):
     backbone.eval()
     classifier.eval()
     val_loss = []
@@ -109,45 +88,13 @@ def validate(loader, backbone, classifier, criterion, n_blocks):
 
         if random_pic_select==idx:
             print("Adding Image Example to Logger")
-            pred_segmentation = wandb.Image(img[0],
-                masks={
-                    "predictions": {
-                        "mask_data": torch.argmax(pred_logits, dim=1).squeeze(0).cpu().numpy(),
-                        "class_labels": CLASS_LABELS
-                        }
-                    })
-            gt_segmentation = wandb.Image(img[0],
-                masks={
-                    "ground_truth": {
-                        "mask_data": segmentation.squeeze(0).cpu().numpy(),
-                        "class_labels": CLASS_LABELS
-                        }
-                    })
-            wandb.log({
-                "Pred Segmentation": pred_segmentation,
-                "GT Segmentation": gt_segmentation},
-                step=global_step)
+            logger.log_segmentation(img[0], pred_logits, segmentation, step=global_step)
 
     return np.mean(np.array(miou_arr)), np.mean(np.array(val_loss))
 
 
 def main(args):
-    config = {
-        "arch": args.arch,
-        "epochs": args.epochs,
-        "batch_size": args.batch_size,
-        "learning_rate": args.lr,
-        "patch_size": args.patch_size,
-        "number_blocks": args.n_blocks,
-        "percentage_train_labels": args.percentage,
-        "upsample": args.upsample
-    }
-    
-    wandb.init(
-        project="iBot",
-        entity="dl_lab_enjoyers",
-        name=datetime.now().strftime('%m.%d.%Y-%H:%M:%S'),
-        config=config)
+    logger = WBLogger(args)
 
     # Loading the backbone
     backbone = models.__dict__[args.arch](
@@ -164,7 +111,9 @@ def main(args):
 
     n_blocks = args.n_blocks
     embed_dim = backbone.embed_dim * n_blocks
-    classifier = ConvLinearClassifier(embed_dim, n_classes=21, upsample_mode=args.upsample).cuda()
+    classifier = ConvLinearClassifier(embed_dim,
+                                      n_classes=2 if args.segmentation == 'binary' else 21,
+                                      upsample_mode=args.upsample).cuda()
 
     ## TRAINING DATASET ##
     train_transform = _transforms.Compose([
@@ -172,13 +121,15 @@ def main(args):
         _transforms.RandomHorizontalFlip(),
         _transforms.ToTensor(),
         _transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
-    ])
+        ] + [_transforms.ToBinaryMask()] if args.segmentation == 'binary' else []
+    )
     val_transform = _transforms.Compose([
         _transforms.Resize(256, interpolation=_transforms.INTERPOLATION_BICUBIC),
         _transforms.CenterCrop(224),
         _transforms.ToTensor(),
         _transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
-    ])
+        ] + [_transforms.ToBinaryMask()] if args.segmentation == 'binary' else []
+    )
 
     train_dataset = PartialDatasetVOC(percentage = args.percentage, root=args.root, image_set='train', download=False, transforms=train_transform)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size)
@@ -198,17 +149,17 @@ def main(args):
     ############## TRAINING LOOP #######################
 
     for epoch in range(args.epochs):
-        mean_loss = train(train_loader, backbone, classifier, criterion, optimizer, n_blocks)
+        mean_loss = train(train_loader, backbone, classifier, logger, criterion, optimizer, n_blocks)
         print(f"For epoch number {epoch} --> Average Loss {mean_loss:.2f}")
-        wandb.log({"training_loss": mean_loss}, step=global_step)
-        if epoch % 10 == 0:
-            miou, loss = validate(val_loader, backbone, classifier, criterion, n_blocks)
+        logger.log_scalar({"mean training_loss": mean_loss}, step=global_step)
+        if epoch % args.eval_freq == 0 or epoch == (args.epochs - 1):
+            miou, loss = validate(val_loader, backbone, classifier, logger, criterion, n_blocks)
             print(f"Validation for epoch {epoch}: Average mIoU {miou}, Average Loss {loss}")
-            wandb.log({
+            logger.log_scalar({
                 "val_loss": loss,
                 "val_miou": miou
             })
-        
+
         lr_scheduler.step()
 
 
