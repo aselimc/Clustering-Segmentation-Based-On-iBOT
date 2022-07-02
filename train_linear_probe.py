@@ -1,41 +1,24 @@
 import argparse
 from datetime import datetime
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-
-
-from utils import mIoU, MaskedCrossEntropyLoss
-from dataloader import PartialDatasetVOC
-from torchvision import datasets
-import torch.nn.functional as Fun
-from tqdm import tqdm
-import transforms as _transforms
-from logger import WBLogger
 from torch.utils.data import DataLoader
+from torchvision import datasets
+from tqdm import tqdm
+
+from dataloader import PartialDatasetVOC
+from logger import WBLogger
 import models
 from models.classifier import ConvLinearClassifier
+import transforms as _transforms
+from utils import mIoU, MaskedCrossEntropyLoss
 
 
 global_step = 0
 
-def parser_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--root', type=str, default="data")
-    parser.add_argument('--weights', type=str, default="weights/ViT-S16.pth")
-    parser.add_argument('--arch', type=str, default="vit_small")
-    parser.add_argument('--patch_size', type=int, default=16)
-    parser.add_argument('--epochs', type=int, default=100)
-    parser.add_argument('--n_blocks', type=int, default=4)
-    parser.add_argument('--batch_size', type=int, default=32)
-    parser.add_argument("--lr", type=float, default=1e-3)
-    parser.add_argument("--percentage", type=float, default=0.1)
-    parser.add_argument("--upsample", type=str, choices=['nearest', 'bilinear'], default='nearest')
-    parser.add_argument("--segmentation", type=str, choices=['binary', 'multi'], default='multi')
-    parser.add_argument("--eval_freq", type=int, default=5)
-
-    return parser.parse_args()
 
 def train(loader, backbone, classifier, logger, criterion, optimizer, n_blocks):
     global global_step
@@ -161,6 +144,24 @@ def main(args):
             })
 
         lr_scheduler.step()
+
+
+def parser_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--root', type=str, default="data")
+    parser.add_argument('--weights', type=str, default="weights/ViT-S16.pth")
+    parser.add_argument('--arch', type=str, default="vit_small")
+    parser.add_argument('--patch_size', type=int, default=16)
+    parser.add_argument('--epochs', type=int, default=100)
+    parser.add_argument('--n_blocks', type=int, default=4)
+    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument("--percentage", type=float, default=0.1)
+    parser.add_argument("--upsample", type=str, choices=['nearest', 'bilinear'], default='nearest')
+    parser.add_argument("--segmentation", type=str, choices=['binary', 'multi'], default='multi')
+    parser.add_argument("--eval_freq", type=int, default=5)
+
+    return parser.parse_args()
 
 
 if __name__ == '__main__':
