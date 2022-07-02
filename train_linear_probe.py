@@ -1,6 +1,6 @@
 import argparse
 from datetime import datetime
-from random import shuffle
+from random import choices, shuffle
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -58,6 +58,7 @@ def parser_args():
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--percentage", type=float, default=0.1)
+    parser.add_argument("--upsample", type=str, choices=['nearest', 'bilinear'], default='nearest')
 
     return parser.parse_args()
 
@@ -164,7 +165,7 @@ def main(args):
 
     n_blocks = args.n_blocks
     embed_dim = backbone.embed_dim * n_blocks
-    classifier = ConvLinearClassifier(embed_dim, n_classes=21).cuda()
+    classifier = ConvLinearClassifier(embed_dim, n_classes=21, upsample_mode=args.upsample).cuda()
 
     ## TRAINING DATASET ##
     train_transform = Compose([
