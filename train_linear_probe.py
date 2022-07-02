@@ -141,7 +141,7 @@ def main(args):
             logger.log_scalar({
                 "val_loss": loss,
                 "val_miou": miou
-            })
+            }, step=global_step)
 
         lr_scheduler.step()
 
