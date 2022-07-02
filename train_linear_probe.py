@@ -141,6 +141,7 @@ def main(args):
         "patch_size": args.patch_size,
         "number_blocks": args.n_blocks,
         "percentage_train_labels": args.percentage,
+        "upsample": args.upsample
     }
     
     wandb.init(
