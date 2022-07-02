@@ -1,3 +1,5 @@
+from configparser import Interpolation
+import math
 import random
 
 import numpy as np
@@ -6,6 +8,12 @@ from torchvision import transforms as T
 from torchvision.transforms import functional as F
 
 
+INTERPOLATION_NEAREST = 0
+INTERPOLATION_BILINEAR = 2
+INTERPOLATION_BICUBIC = 3
+
+
+# https://github.com/pytorch/vision/blob/main/references/segmentation/transforms.py
 def pad_if_smaller(img, size, fill=0):
     min_size = min(img.size)
     if min_size < size:
@@ -26,6 +34,19 @@ class Compose:
         return image, target
 
 
+class Resize:
+    def __init__(self, size, interpolation=INTERPOLATION_BILINEAR):
+        self.size = size
+        self.img_resize = T.Resize(size, interpolation=interpolation)
+        self.target_resize = T.Resize(size, interpolation=INTERPOLATION_NEAREST)
+
+    def __call__(self, image, target):
+        image = self.img_resize(image)
+        target = self.target_resize(target)
+
+        return image, target
+
+
 class RandomResize:
     def __init__(self, min_size, max_size=None):
         self.min_size = min_size
@@ -36,7 +57,7 @@ class RandomResize:
     def __call__(self, image, target):
         size = random.randint(self.min_size, self.max_size)
         image = F.resize(image, size)
-        target = F.resize(target, size, interpolation=T.InterpolationMode.NEAREST)
+        target = F.resize(target, size, interpolation=INTERPOLATION_NEAREST)
         return image, target
 
 
@@ -65,6 +86,60 @@ class RandomCrop:
         return image, target
 
 
+# https://pytorch.org/vision/0.8/_modules/torchvision/transforms/transforms.html#RandomResizedCrop
+class RandomResizedCrop:
+    def __init__(self, size, 
+                 scale=(0.08, 1.0), 
+                 ratio=(3. / 4., 4. / 3.), 
+                 interpolation=INTERPOLATION_BILINEAR):
+        self.size = size
+        self.interpolation = interpolation
+        self.scale = scale
+        self.ratio = ratio
+
+    @staticmethod
+    def get_params(image, scale, ratio):
+        width, height = F._get_image_size(image)
+        area = height * width
+
+        for _ in range(10):
+            target_area = area * torch.empty(1).uniform_(scale[0], scale[1]).item()
+            log_ratio = torch.log(torch.tensor(ratio))
+            aspect_ratio = torch.exp(
+                torch.empty(1).uniform_(log_ratio[0], log_ratio[1])
+            ).item()
+
+            w = int(round(math.sqrt(target_area * aspect_ratio)))
+            h = int(round(math.sqrt(target_area / aspect_ratio)))
+
+            if 0 < w <= width and 0 < h <= height:
+                i = torch.randint(0, height - h + 1, size=(1,)).item()
+                j = torch.randint(0, width - w + 1, size=(1,)).item()
+                return i, j, h, w
+
+        # Fallback to central crop
+        in_ratio = float(width) / float(height)
+        if in_ratio < min(ratio):
+            w = width
+            h = int(round(w / min(ratio)))
+        elif in_ratio > max(ratio):
+            h = height
+            w = int(round(h * max(ratio)))
+        else:  # whole image
+            w = width
+            h = height
+        i = (height - h) // 2
+        j = (width - w) // 2
+        return i, j, h, w
+    
+    def __call__(self, image, target):
+        i, j, h, w = self.get_params(image, self.scale, self.ratio)
+        image = F.resized_crop(image, i, j, h, w, (self.size, self.size), self.interpolation)
+        target = F.resized_crop(target, i, j, h, w, (self.size, self.size), INTERPOLATION_NEAREST)
+
+        return image, target
+
+
 class CenterCrop:
     def __init__(self, size):
         self.size = size
@@ -83,9 +158,12 @@ class MergeContours:
         return image, target
 
 
-class PILToTensor:
+class ToTensor:
+    def __init__(self):
+        self.to_tensor = T.ToTensor()
+    
     def __call__(self, image, target):
-        image = F.pil_to_tensor(image) / 255.0
+        image = self.to_tensor(image)
         target = torch.as_tensor(np.array(target))
         return image, target
 
