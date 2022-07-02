@@ -16,6 +16,7 @@ from tqdm import tqdm
 from transforms import *
 from torch.utils.data import DataLoader
 import models
+from models.classifier import ConvLinearClassifier
 from torch.utils.tensorboard import SummaryWriter
 
 
@@ -128,23 +129,6 @@ def validate(loader, backbone, classifier, criterion, n_blocks):
                 step=global_step)
 
     return np.mean(np.array(miou_arr)), np.mean(np.array(val_loss))
-
-
-class ConvLinearClassifier(nn.Module):
-    def __init__(self, embed_dim, n_classes):
-        super().__init__()
-        self.n_classes = n_classes
-        self.conv1 = nn.Conv2d(in_channels=embed_dim, out_channels=n_classes, kernel_size=1)
-
-    def forward(self,x):
-        bs, h_sqrt , ch= x.shape
-        h = int(np.sqrt(h_sqrt))
-        
-        x = x.contiguous().view(bs,ch, h, h)
-        x = self.conv1(x)
-        x = Fun.interpolate(x, size=[224, 224], mode="bilinear", align_corners=True)
-    
-        return x
 
 
 def main(args):
