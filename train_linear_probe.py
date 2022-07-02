@@ -1,6 +1,6 @@
 import argparse
 from datetime import datetime
-from random import choices, shuffle
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
