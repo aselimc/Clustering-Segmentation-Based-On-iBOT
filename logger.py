@@ -44,17 +44,7 @@ class WBLogger:
         else:
             self.class_labels = CLASS_LABELS_MULTI
 
-        self.config = {
-            "arch": args.arch,
-            "epochs": args.epochs,
-            "batch_size": args.batch_size,
-            "learning_rate": args.lr,
-            "patch_size": args.patch_size,
-            "number_blocks": args.n_blocks,
-            "percentage_train_labels": args.percentage,
-            "upsample": args.upsample,
-            "segmentation": args.segmentation
-            }
+        self.config = vars(args)
 
         wandb.init(
         project="iBot",
