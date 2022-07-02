@@ -919,4 +919,7 @@ class MaskedCrossEntropyLoss(nn.Module):
         loss[mask] = 0.0
         loss = loss.sum() / (loss.numel() - num_mask_el)
 
+        # revert dummy label
+        target[mask] = 255
+
         return loss
