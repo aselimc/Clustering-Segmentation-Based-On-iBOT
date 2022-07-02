@@ -136,7 +136,7 @@ def main(args):
         print(f"For epoch number {epoch} --> Average Loss {mean_loss:.2f}")
         logger.log_scalar({
             "mean training_loss": mean_loss,
-            "learning_rate": lr_scheduler.get_last_lr()
+            "learning_rate": lr_scheduler.get_last_lr()[0]
         }, step=global_step)
         if epoch % args.eval_freq == 0 or epoch == (args.epochs - 1):
             miou, loss = validate(val_loader, backbone, classifier, logger, criterion, n_blocks)
