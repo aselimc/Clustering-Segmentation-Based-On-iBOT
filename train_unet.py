@@ -12,7 +12,7 @@ from tqdm import tqdm
 from dataloader import PartialDatasetVOC
 from logger import WBLogger
 import models
-from models.classifier import UNetClassifier
+from models.classifier import UNet
 import transforms as _transforms
 from utils import mIoU, MaskedCrossEntropyLoss
 
@@ -73,8 +73,9 @@ def validate(loader, classifier, logger, criterion):
 def main(args):
     logger = WBLogger(args)
 
-    classifier = UNetClassifier(n_classes=2 if args.segmentation == 'binary' else 21,
-                                upsample_mode=args.upsample).cuda()
+    classifier = UNet(n_channels=3,
+                      n_classes=2 if args.segmentation == 'binary' else 21,
+                      bilinear=(args.upsample == 'bilinear')).cuda()
 
     ## TRAINING DATASET ##
     train_transform = _transforms.Compose([
