@@ -1,5 +1,7 @@
 data/
 data
+wandb
+wandb/
 work_dirs/
 work_dirs
 *.zip
