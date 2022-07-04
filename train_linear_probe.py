@@ -18,7 +18,7 @@ from models.classifier import *
 import transforms as _transforms
 from utils import mIoU, MaskedCrossEntropyLoss, load_pretrained_weights, extract_feature, cosine_scheduler
 
-
+torch.backends.cudnn.benchmark = True
 global_step = 0
 
 
@@ -89,13 +89,17 @@ def main(args):
 
     ################################# BACKBONE & CLASSIFIER INIT #################################
     # Loading backbone ViT from the models dir
+
     backbone = models.__dict__[args.arch](
         patch_size=args.patch_size,
         num_classes=0
     )
     backbone = backbone.cuda()
-    # Loading the weights from a full .ckpt file that can be downloaded from https://github.com/aselimc/iBot-cv/blob/main/README.md#pre-trained-models
-    load_pretrained_weights(backbone, args.weights, "teacher", args.arch, args.patch_size)
+
+    # Loading the weights from a full .ckpt file that can be downloaded from 
+    # https://github.com/aselimc/iBot-cv/blob/main/README.md#pre-trained-models
+
+    load_pretrained_weights(backbone, "download", "teacher", args.arch, args.patch_size)
 
     # Freezing the backbone weights
     for param in backbone.parameters():
@@ -150,7 +154,6 @@ def main(args):
     val_loader = DataLoader(val_dataset, batch_size=1)
 
     # Training tools like Optimizer and Scheduler initializations
-
     if args.optimizer  == "SGD":
         optimizer = optim.SGD(
         classifier.parameters(),
@@ -210,14 +213,14 @@ def parser_args():
     parser.add_argument('--patch_size', type=int, default=16)
     parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--n_blocks', type=int, default=1)
-    parser.add_argument('--batch_size', type=int, default=16)
+    parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--lr', type=float, default=1e-2)
-    parser.add_argument('--percentage', type=float, default=0.1)
+    parser.add_argument('--percentage', type=float, default=1)
     parser.add_argument('--upsample', type=str, choices=['nearest', 'bilinear'], default='bilinear')
     parser.add_argument('--segmentation', type=str, choices=['binary', 'multi'], default='multi')
     parser.add_argument('--eval_freq', type=int, default=5)
     parser.add_argument('--model_folder', type=str, default="classifier_models")
-    parser.add_argument('--classifier_type', type=str, choices=['ConvSingleLinear',"ConvLinear", "UNet", "k-means"], default="ConvLinear")
+    parser.add_argument('--classifier_type', type=str, choices=['ConvSingleLinear',"ConvLinear", "UNet", "k-means"], default="ConvSingleLinear")
     parser.add_argument('--optimizer', type=str, choices=["SGD", "AdamW"], default="SGD")
     parser.add_argument('--snapshot_freq', type=int, default=10)
 

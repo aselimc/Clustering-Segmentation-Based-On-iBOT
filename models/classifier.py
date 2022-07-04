@@ -109,11 +109,11 @@ class UNetClassifier(nn.Module):
 class ConvSingleLinearClassifier(nn.Module):
     def __init__(self, embed_dim, n_classes, patch_size, upsample_mode='bilinear'):
         super().__init__()
-        self.conv1 = nn.Conv2d(embed_dim, n_classes, kernel_size=1)
+        self.conv1 = nn.Conv2d(embed_dim, n_classes, kernel_size=5)
         self.patch_size = patch_size
         self.mode = upsample_mode
 
     def forward(self, x):
         x = self.conv1(x)
-        x = F.interpolate(x, scale_factor=self.patch_size, mode= self.mode, align_corners=False, recompute_scale_factor=False)
+        x = F.interpolate(x, size = [224, 224], mode= self.mode, align_corners=False, recompute_scale_factor=False)
         return x
