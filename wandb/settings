@@ -1,0 +1,5 @@
+[default]
+entity = dl_lab_enjoyers
+project = iBot
+base_url = https://api.wandb.ai
+

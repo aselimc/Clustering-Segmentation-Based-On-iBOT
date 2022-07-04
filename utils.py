@@ -20,6 +20,7 @@ import subprocess
 import numpy as np
 import torch
 import torch.distributed as dist
+import torch.nn.functional as F
 
 from collections import defaultdict, deque
 from pathlib import Path
@@ -890,18 +891,37 @@ def compute_map(ranks, gnd, kappas=[]):
 
     return map, aps, pr, prs
 
-def mIoU(logits, gt, threshold=0.5):
-    if logits.shape[1] == 1 or len(logits.shape)==3:
-        if threshold==0.5:
-            pred = logits.round().byte()
-        else:
-            pred = logits > threshold
-    else:
-        pred = logits.argmax(dim=1).byte()
-    intersection = ((pred == 1) & (gt == 1)).sum().float()
-    union = ((pred == 1) | (gt == 1)).sum().float()
-    return intersection/(union+1.)
+def mIoU(label, pred, num_classes=21):
+    pred = F.softmax(pred.float(), dim=1)              
+    pred = torch.argmax(pred, dim=1).squeeze(1)
+    iou_list = list()
+    present_iou_list = list()
 
+    pred = pred.view(-1)
+    label = label.view(-1)
+    for sem_class in range(num_classes):
+        pred_inds = (pred == sem_class)
+        target_inds = (label == sem_class)
+        if target_inds.long().sum().item() == 0:
+            iou_now = float('nan')
+        else: 
+            intersection_now = (pred_inds[target_inds]).long().sum().item()
+            union_now = pred_inds.long().sum().item() + target_inds.long().sum().item() - intersection_now
+            iou_now = float(intersection_now) / float(union_now)
+            present_iou_list.append(iou_now)
+        iou_list.append(iou_now)
+    return np.mean(present_iou_list)
+
+def extract_feature(model, image, n, return_h_w=False):
+    """Extract one image feature everytime."""
+    out = torch.cat(model.get_intermediate_layers(image.cuda(), n=n), dim=2)
+    out = out[:, 1:, :]  # we discard the [CLS] token
+    h, w = int(image.shape[2] / model.patch_embed.patch_size), int(image.shape[3] / model.patch_embed.patch_size)
+    dim = out.shape[-1]
+    out = out.reshape(-1, dim, h, w)
+    if return_h_w:
+        return out, h, w
+    return out
 
 class MaskedCrossEntropyLoss(nn.Module):
     def __init__(self, mask_val=255):

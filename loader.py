@@ -6,9 +6,12 @@
 
 import random
 import math
+from typing import overload
 import numpy as np
 
+from typing import List
 from torchvision.datasets import ImageFolder
+from torchvision.datasets import VOCSegmentation
 
 class ImageFolderInstance(ImageFolder):
     def __getitem__(self, index):
@@ -114,3 +117,13 @@ class ImageFolderMask(ImageFolder):
             masks.append(mask)
 
         return output + (masks,)
+
+
+class PartialDatasetVOC(VOCSegmentation):
+    def __init__(self, percentage, root, year='2012', image_set='train', download=False, transform=None, target_transform=None, transforms=None):
+        super().__init__(root, year, image_set, download, transform, target_transform, transforms)
+        self.percentage = percentage
+        if percentage < 1:
+            self.images = self.images[:int(percentage*len(self.images))]
+            self.targets = self.targets[:int(percentage*len(self.targets))]
+

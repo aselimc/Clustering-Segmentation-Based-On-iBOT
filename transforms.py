@@ -99,7 +99,7 @@ class RandomResizedCrop:
 
     @staticmethod
     def get_params(image, scale, ratio):
-        width, height = F._get_image_size(image)
+        width, height = F.get_image_size(image)
         area = height * width
 
         for _ in range(10):

@@ -1,7 +1,8 @@
 import numpy as np
+from requests import patch
 import torch
 import torch.nn as nn
-
+import torch.nn.functional as F
 
 class DownSampleBlock(nn.Module):
 
@@ -56,9 +57,6 @@ class ConvLinearClassifier(nn.Module):
         self.conv_mask = nn.Conv2d(self.chn[3], n_classes, kernel_size=1, stride=1)
 
     def forward(self,x):
-        bs, h_sqrt , ch= x.shape
-        h = int(np.sqrt(h_sqrt))
-        x = x.contiguous().view(bs,ch, h, h)
         
         out = self.block1(x)
         out = self.block2(out)
@@ -107,3 +105,15 @@ class UNetClassifier(nn.Module):
         dec = self.conv_mask(dec)
 
         return dec
+
+class ConvSingleLinearClassifier(nn.Module):
+    def __init__(self, embed_dim, n_classes, patch_size, upsample_mode='bilinear'):
+        super().__init__()
+        self.conv1 = nn.Conv2d(embed_dim, n_classes, kernel_size=1)
+        self.patch_size = patch_size
+        self.mode = upsample_mode
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = F.interpolate(x, scale_factor=self.patch_size, mode= self.mode, align_corners=False, recompute_scale_factor=False)
+        return x
