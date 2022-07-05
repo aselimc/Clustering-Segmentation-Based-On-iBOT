@@ -148,7 +148,7 @@ def main(args):
     val_transform = _transforms.Compose(val_transformations)
 
     # Dataset and Loader initializations
-    train_dataset = PartialDatasetVOC(percentage = args.percentage, root=args.root, image_set='train', download=False, transforms=train_transform)
+    train_dataset = PartialDatasetVOC(percentage = args.percentage, root=args.root, image_set='train', download=args.download_data, transforms=train_transform)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size)
     val_dataset = datasets.VOCSegmentation(root=args.root, image_set='val', download=False, transforms=val_transform)
     val_loader = DataLoader(val_dataset, batch_size=1)
@@ -223,6 +223,7 @@ def parser_args():
     parser.add_argument('--classifier_type', type=str, choices=['ConvSingleLinear',"ConvLinear", "UNet", "k-means"], default="ConvSingleLinear")
     parser.add_argument('--optimizer', type=str, choices=["SGD", "AdamW"], default="SGD")
     parser.add_argument('--snapshot_freq', type=int, default=10)
+    parser.add_argument('--download_data', type=bool, default=False)
 
     return parser.parse_args()
 
