@@ -914,7 +914,7 @@ def mIoU(label, pred, num_classes=21):
 
 def extract_feature(model, image, n, return_h_w=False):
     """Extract one image feature everytime."""
-    out = torch.cat(model.get_intermediate_layers(image.cuda(), n=n), dim=2)
+    out = torch.mean(torch.stack(model.get_intermediate_layers(image.cuda(), n=n), dim=2), dim=2)
     out = out[:, 1:, :]  # we discard the [CLS] token
     h, w = int(image.shape[2] / model.patch_embed.patch_size), int(image.shape[3] / model.patch_embed.patch_size)
     dim = out.shape[-1]

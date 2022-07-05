@@ -99,7 +99,7 @@ def main(args):
     # Loading the weights from a full .ckpt file that can be downloaded from 
     # https://github.com/aselimc/iBot-cv/blob/main/README.md#pre-trained-models
 
-    load_pretrained_weights(backbone, "download", "teacher", args.arch, args.patch_size)
+    load_pretrained_weights(backbone, args.weights, "teacher", args.arch, args.patch_size)
 
     # Freezing the backbone weights
     for param in backbone.parameters():
@@ -107,10 +107,10 @@ def main(args):
 
     # Number of blocks of ViT to extract information and feature space dimension based on this
     n_blocks = args.n_blocks
-    embed_dim = backbone.embed_dim * n_blocks
+    embed_dim = backbone.embed_dim # * n_blocks
 
     # Classifier type definitions
-    if args.classifier_type == "ConvLinear":
+    if args.classifier_type == "ConvLinear": 
         classifier = ConvLinearClassifier(embed_dim,
                                       n_classes=2 if args.segmentation == 'binary' else 21,
                                       upsample_mode=args.upsample).cuda()
@@ -207,12 +207,12 @@ def main(args):
 
 def parser_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--root', type=str, default="data")
+    parser.add_argument('--root', type=str, default="data/VOCtrainval_11-May-2012")
     parser.add_argument('--weights', type=str, default="weights/checkpoint.pth")
-    parser.add_argument('--arch', type=str, default="vit_small")
+    parser.add_argument('--arch', type=str, default="vit_large")
     parser.add_argument('--patch_size', type=int, default=16)
-    parser.add_argument('--epochs', type=int, default=100)
-    parser.add_argument('--n_blocks', type=int, default=1)
+    parser.add_argument('--epochs', type=int, default=500)
+    parser.add_argument('--n_blocks', type=int, default=4)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument('--lr', type=float, default=1e-2)
     parser.add_argument('--percentage', type=float, default=1)
