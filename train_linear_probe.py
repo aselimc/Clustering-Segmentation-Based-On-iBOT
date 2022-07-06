@@ -32,7 +32,9 @@ def train(loader, backbone, classifier, logger, criterion, optimizer, n_blocks):
         segmentation = segmentation.cuda()
         with torch.no_grad():
             intermediate_output = backbone.get_intermediate_layers(img, n_blocks)
-            output = torch.cat([x[:, 1:] for x in intermediate_output], dim=-1).detach()
+            output = torch.stack(intermediate_output, dim=2)
+            output = torch.mean(output, dim=2)
+            output = output[:, 1:].detach()
         pred_logits = classifier(output)
 
         loss = criterion(pred_logits, segmentation)
@@ -60,7 +62,9 @@ def validate(loader, backbone, classifier, logger, criterion, n_blocks):
         segmentation = segmentation.cuda()
         with torch.no_grad():
             intermediate_output = backbone.get_intermediate_layers(img, n_blocks)
-            output = torch.cat([x[:, 1:] for x in intermediate_output], dim=-1).detach()
+            output = torch.stack(intermediate_output, dim=2)
+            output = torch.mean(output, dim=2)
+            output = output[:, 1:].detach()
         pred_logits = classifier(output)
 
         # mask contours: compute pixelwise dummy entropy loss then set it to 0.0
@@ -95,7 +99,7 @@ def main(args):
         param.requires_grad = False
 
     n_blocks = args.n_blocks
-    embed_dim = backbone.embed_dim * n_blocks
+    embed_dim = backbone.embed_dim# * n_blocks
     classifier = ConvLinearClassifier(embed_dim,
                                       n_classes=2 if args.segmentation == 'binary' else 21,
                                       upsample_mode=args.upsample).cuda()
@@ -123,7 +127,7 @@ def main(args):
 
     optimizer = optim.SGD(
         classifier.parameters(),
-        args.lr * args.batch_size / 256.0,
+        args.lr,
         momentum=0.9,
         weight_decay=0
     )
