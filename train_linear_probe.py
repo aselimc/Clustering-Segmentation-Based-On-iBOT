@@ -86,7 +86,7 @@ def main(args):
     # Loading the backbone
     backbone = models.__dict__[args.arch](
         patch_size=args.patch_size,
-        return_all_tokens=True,
+        num_classes=0
     )
 
     load_pretrained_weights(backbone, args.weights,
