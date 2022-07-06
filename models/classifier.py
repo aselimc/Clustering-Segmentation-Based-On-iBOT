@@ -40,10 +40,11 @@ class ConvLinearClassifier(nn.Module):
         self.conv_mask = nn.Conv2d(self.chn[3], n_classes, kernel_size=1, stride=1)
 
     def forward(self,x):
-        bs, h_sqrt , ch= x.shape
+        bs, h_sqrt, ch = x.shape
         h = int(np.sqrt(h_sqrt))
-        x = x.contiguous().view(bs,ch, h, h)
-        
+        x = x.permute(0, 2, 1).contiguous()
+        x = x.view(bs, ch, h, h)
+
         out = self.block1(x)
         out = self.block2(out)
         out = self.block3(out)
