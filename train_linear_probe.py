@@ -117,7 +117,7 @@ def main(args):
     )
 
     train_dataset = PartialDatasetVOC(percentage = args.percentage, root=args.root, image_set='train', download=False, transforms=train_transform)
-    train_loader = DataLoader(train_dataset, batch_size=args.batch_size)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.workers)
     val_dataset = datasets.VOCSegmentation(root=args.root, image_set='val', download=False, transforms=val_transform)
     val_loader = DataLoader(val_dataset, batch_size=1)
 
@@ -165,6 +165,7 @@ def parser_args():
     parser.add_argument("--upsample", type=str, choices=['nearest', 'bilinear'], default='nearest')
     parser.add_argument("--segmentation", type=str, choices=['binary', 'multi'], default='multi')
     parser.add_argument("--eval_freq", type=int, default=5)
+    parser.add_argument("--workers", type=int, default=4)
 
     return parser.parse_args()
 
