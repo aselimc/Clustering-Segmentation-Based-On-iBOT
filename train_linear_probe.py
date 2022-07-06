@@ -14,7 +14,7 @@ from logger import WBLogger
 import models
 from models.classifier import ConvLinearClassifier
 import transforms as _transforms
-from utils import mIoU, MaskedCrossEntropyLoss
+from utils import mIoU, MaskedCrossEntropyLoss, load_pretrained_weights
 
 
 global_step = 0
@@ -85,8 +85,10 @@ def main(args):
         return_all_tokens=True,
     )
 
-    state_dict = torch.load(args.weights)['state_dict']
-    backbone.load_state_dict(state_dict)
+    load_pretrained_weights(backbone, args.weights,
+                            checkpoint_key="teacher",
+                            model_name=args.arch,
+                            patch_size=args.patch_size)
     backbone = backbone.cuda()
 
     for param in backbone.parameters():
@@ -104,14 +106,14 @@ def main(args):
         _transforms.RandomHorizontalFlip(),
         _transforms.ToTensor(),
         _transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
-        ] + [_transforms.ToBinaryMask()] if args.segmentation == 'binary' else []
+        ] + ([_transforms.ToBinaryMask()] if args.segmentation == 'binary' else [])
     )
     val_transform = _transforms.Compose([
         _transforms.Resize(256, interpolation=_transforms.INTERPOLATION_BICUBIC),
         _transforms.CenterCrop(224),
         _transforms.ToTensor(),
         _transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
-        ] + [_transforms.ToBinaryMask()] if args.segmentation == 'binary' else []
+        ] + ([_transforms.ToBinaryMask()] if args.segmentation == 'binary' else [])
     )
 
     train_dataset = PartialDatasetVOC(percentage = args.percentage, root=args.root, image_set='train', download=False, transforms=train_transform)
