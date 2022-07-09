@@ -903,7 +903,7 @@ def mIoU(label, pred, num_classes=21):
         target_inds = (label == sem_class)
         if target_inds.long().sum().item() == 0:
             iou_now = float('nan')
-        else: 
+        else:
             intersection_now = (pred_inds[target_inds]).long().sum().item()
             union_now = pred_inds.long().sum().item() + target_inds.long().sum().item() - intersection_now
             iou_now = float(intersection_now) / float(union_now)

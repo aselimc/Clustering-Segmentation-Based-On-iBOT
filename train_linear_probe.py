@@ -12,12 +12,24 @@ from tqdm import tqdm
 from dataloader import PartialDatasetVOC
 from logger import WBLogger
 import models
-from models.classifier import ConvLinearClassifier
+from models.classifier import ConvMultiLinearClassifier, ConvSingleLinearClassifier
 import transforms as _transforms
 from utils import mIoU, MaskedCrossEntropyLoss, load_pretrained_weights
 
 
 global_step = 0
+
+
+def extract_feature(backbone, img, n_blocks):
+    intermediate_output = backbone.get_intermediate_layers(img, n_blocks)
+    output = torch.stack(intermediate_output, dim=2)
+    output = torch.mean(output, dim=2)
+    output = output[:, 1:]
+    h, w = int(img.shape[2] / backbone.patch_embed.patch_size), int(img.shape[3] / backbone.patch_embed.patch_size)
+    dim = output.shape[-1]
+    output = output.reshape(-1, dim, h, w)
+
+    return output
 
 
 def train(loader, backbone, classifier, logger, criterion, optimizer, n_blocks):
@@ -31,10 +43,7 @@ def train(loader, backbone, classifier, logger, criterion, optimizer, n_blocks):
         img = img.cuda()
         segmentation = segmentation.cuda()
         with torch.no_grad():
-            intermediate_output = backbone.get_intermediate_layers(img, n_blocks)
-            output = torch.stack(intermediate_output, dim=2)
-            output = torch.mean(output, dim=2)
-            output = output[:, 1:].detach()
+            output = extract_feature(backbone, img, n_blocks).detach()
         pred_logits = classifier(output)
 
         loss = criterion(pred_logits, segmentation)
@@ -61,10 +70,7 @@ def validate(loader, backbone, classifier, logger, criterion, n_blocks):
         img = img.cuda()
         segmentation = segmentation.cuda()
         with torch.no_grad():
-            intermediate_output = backbone.get_intermediate_layers(img, n_blocks)
-            output = torch.stack(intermediate_output, dim=2)
-            output = torch.mean(output, dim=2)
-            output = output[:, 1:].detach()
+            output = extract_feature(backbone, img, n_blocks).detach()
         pred_logits = classifier(output)
 
         # mask contours: compute pixelwise dummy entropy loss then set it to 0.0
@@ -100,9 +106,16 @@ def main(args):
 
     n_blocks = args.n_blocks
     embed_dim = backbone.embed_dim# * n_blocks
-    classifier = ConvLinearClassifier(embed_dim,
-                                      n_classes=2 if args.segmentation == 'binary' else 21,
-                                      upsample_mode=args.upsample).cuda()
+    
+    if args.classifier_type == "ConvMultiLinear":
+        classifier = ConvMultiLinearClassifier(embed_dim,
+                                        n_classes=2 if args.segmentation == 'binary' else 21,
+                                        upsample_mode=args.upsample).cuda()
+    else:
+        classifier = ConvSingleLinearClassifier(embed_dim,
+                                                n_classes=2 if args.segmentation == 'binary' else 21,
+                                                patch_size=args.patch_size,
+                                                upsample_mode=args.upsample).cuda()
 
     ## TRAINING DATASET ##
     train_transform = _transforms.Compose([
@@ -111,6 +124,7 @@ def main(args):
         _transforms.ToTensor(),
         _transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
         ] + ([_transforms.ToBinaryMask()] if args.segmentation == 'binary' else [])
+          + [_transforms.MergeContours()]
     )
     val_transform = _transforms.Compose([
         _transforms.Resize(256, interpolation=_transforms.INTERPOLATION_BICUBIC),
@@ -118,6 +132,7 @@ def main(args):
         _transforms.ToTensor(),
         _transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
         ] + ([_transforms.ToBinaryMask()] if args.segmentation == 'binary' else [])
+          + [_transforms.MergeContours()]
     )
 
     train_dataset = PartialDatasetVOC(percentage = args.percentage, root=args.root, image_set='train', download=False, transforms=train_transform)
@@ -160,6 +175,7 @@ def parser_args():
     parser.add_argument('--root', type=str, default="data")
     parser.add_argument('--weights', type=str, default="weights/ViT-S16.pth")
     parser.add_argument('--arch', type=str, default="vit_small")
+    parser.add_argument('--classifier_type', type=str, default="ConvSingleLinear")
     parser.add_argument('--patch_size', type=int, default=16)
     parser.add_argument('--epochs', type=int, default=100)
     parser.add_argument('--n_blocks', type=int, default=4)
