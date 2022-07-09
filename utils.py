@@ -890,7 +890,7 @@ def compute_map(ranks, gnd, kappas=[]):
 
     return map, aps, pr, prs
 
-def mIoU(label, pred, num_classes=21):
+def mIoU(pred, label, num_classes=21):
     pred = torch.softmax(pred.float(), dim=1)              
     pred = torch.argmax(pred, dim=1).squeeze(1)
     iou_list = list()
