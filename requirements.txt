@@ -1,0 +1,8 @@
+numpy==1.21.6
+Pillow==9.1.1
+tensorboard==2.9.1
+--find-links https://download.pytorch.org/whl/torch_stable.html
+torch==1.7.1+cu110
+torchvision==0.8.2+cu110
+tqdm==4.64.0
+wandb==0.12.20
