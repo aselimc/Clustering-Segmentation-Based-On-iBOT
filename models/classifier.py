@@ -26,9 +26,9 @@ class UpSampleBlock(nn.Module):
         return out
 
 
-class ConvLinearClassifier(nn.Module):
+class ConvMultiLinearClassifier(nn.Module):
     def __init__(self, embed_dim, n_classes, upsample_mode='nearest'):
-        super(ConvLinearClassifier, self).__init__()
+        super(ConvMultiLinearClassifier, self).__init__()
         self.n_classes = n_classes
         self.chn = [256, 128, 64, 32]
 
@@ -40,11 +40,6 @@ class ConvLinearClassifier(nn.Module):
         self.conv_mask = nn.Conv2d(self.chn[3], n_classes, kernel_size=1, stride=1)
 
     def forward(self,x):
-        bs, h_sqrt, ch = x.shape
-        h = int(np.sqrt(h_sqrt))
-        x = x.permute(0, 2, 1).contiguous()
-        x = x.view(bs, ch, h, h)
-
         out = self.block1(x)
         out = self.block2(out)
         out = self.block3(out)
@@ -159,3 +154,16 @@ class UNet(nn.Module):
         x = self.up4(x, x1)
         logits = self.outc(x)
         return logits
+
+
+class ConvSingleLinearClassifier(nn.Module):
+    def __init__(self, embed_dim, n_classes, patch_size, upsample_mode='bilinear'):
+        super().__init__()
+        self.conv1 = nn.Conv2d(embed_dim, n_classes, kernel_size=4, stride=2)
+        self.patch_size = patch_size
+        self.mode = upsample_mode
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = F.interpolate(x, size = [224, 224], mode= self.mode, align_corners=False, recompute_scale_factor=False)
+        return x
