@@ -163,7 +163,8 @@ class ConvSingleLinearClassifier(nn.Module):
         self.patch_size = patch_size
         self.mode = upsample_mode
 
-    def forward(self, x):
+    def forward(self, x, interpolate=True):
         x = self.conv1(x)
-        x = F.interpolate(x, size = [224, 224], mode= self.mode, align_corners=False, recompute_scale_factor=False)
+        if interpolate:
+            x = F.interpolate(x, size = [224, 224], mode= self.mode, align_corners=False, recompute_scale_factor=False)
         return x
