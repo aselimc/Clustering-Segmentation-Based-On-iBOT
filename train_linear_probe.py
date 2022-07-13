@@ -15,6 +15,7 @@ import models
 from models.classifier import ConvMultiLinearClassifier, ConvSingleLinearClassifier
 import transforms as _transforms
 from utils import mIoU, MaskedCrossEntropyLoss, load_pretrained_weights
+from utils.scheduler import WarmStartCosineAnnealingLR
 
 
 global_step = 0
@@ -146,7 +147,7 @@ def main(args):
         momentum=0.9,
         weight_decay=0
     )
-    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=0)
+    lr_scheduler = WarmStartCosineAnnealingLR(optimizer, args.epochs, args.warmup_epochs, min_lr=0)
 
     criterion = MaskedCrossEntropyLoss()
 
@@ -178,6 +179,7 @@ def parser_args():
     parser.add_argument('--classifier_type', type=str, default="ConvSingleLinear")
     parser.add_argument('--patch_size', type=int, default=16)
     parser.add_argument('--epochs', type=int, default=100)
+    parser.add_argument('--warmup_epochs', type=int, default=10)
     parser.add_argument('--n_blocks', type=int, default=4)
     parser.add_argument('--batch_size', type=int, default=32)
     parser.add_argument("--lr", type=float, default=1e-3)

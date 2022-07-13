@@ -9,22 +9,27 @@ Mostly copy-paste from torchvision references or other public repos like DETR:
 https://github.com/facebookresearch/detr/blob/master/util/misc.py
 """
 
+import argparse
+from collections import defaultdict, deque
+import datetime
+import json
+import math
 import os
+from pathlib import Path
+import random
+import subprocess
 import sys
 import time
-import math
-import json
-import random
-import datetime
-import subprocess
+
 import numpy as np
 import torch
 import torch.distributed as dist
-
-from collections import defaultdict, deque
-from pathlib import Path
 from torch import nn
 from PIL import ImageFilter, ImageOps, Image, ImageDraw
+
+from .losses import MaskedCrossEntropyLoss
+from .metrics import mIoU
+
 
 class GaussianBlur(object):
     """
@@ -204,20 +209,6 @@ def restart_from_checkpoint(ckp_path, run_variables=None, **kwargs):
         for var_name in run_variables:
             if var_name in checkpoint:
                 run_variables[var_name] = checkpoint[var_name]
-
-
-def cosine_scheduler(base_value, final_value, epochs, niter_per_ep, warmup_epochs=0, start_warmup_value=0):
-    warmup_schedule = np.array([])
-    warmup_iters = warmup_epochs * niter_per_ep
-    if warmup_epochs > 0:
-        warmup_schedule = np.linspace(start_warmup_value, base_value, warmup_iters)
-
-    iters = np.arange(epochs * niter_per_ep - warmup_iters)
-    schedule = final_value + 0.5 * (base_value - final_value) * (1 + np.cos(np.pi * iters / len(iters)))
-
-    schedule = np.concatenate((warmup_schedule, schedule))
-    assert len(schedule) == epochs * niter_per_ep
-    return schedule
 
 
 def bool_flag(s):
@@ -889,46 +880,3 @@ def compute_map(ranks, gnd, kappas=[]):
     pr = pr / (nq - nempty)
 
     return map, aps, pr, prs
-
-def mIoU(pred, label, num_classes=21):
-    pred = torch.softmax(pred.float(), dim=1)              
-    pred = torch.argmax(pred, dim=1).squeeze(1)
-    iou_list = list()
-    present_iou_list = list()
-
-    pred = pred.view(-1)
-    label = label.view(-1)
-    for sem_class in range(num_classes):
-        pred_inds = (pred == sem_class)
-        target_inds = (label == sem_class)
-        if target_inds.long().sum().item() == 0:
-            iou_now = float('nan')
-        else:
-            intersection_now = (pred_inds[target_inds]).long().sum().item()
-            union_now = pred_inds.long().sum().item() + target_inds.long().sum().item() - intersection_now
-            iou_now = float(intersection_now) / float(union_now)
-            present_iou_list.append(iou_now)
-        iou_list.append(iou_now)
-    return np.mean(present_iou_list)
-
-
-class MaskedCrossEntropyLoss(nn.Module):
-    def __init__(self, mask_val=255):
-        super(MaskedCrossEntropyLoss, self).__init__()
-        
-        self.mask_val = mask_val
-        self.ce_loss = nn.CrossEntropyLoss(reduction='none')
-    
-    def forward(self, input, target):
-        mask = (target == self.mask_val)
-        num_mask_el = mask.sum()
-        target[mask] = 0
-
-        loss = self.ce_loss(input, target.long())
-        loss[mask] = 0.0
-        loss = loss.sum() / (loss.numel() - num_mask_el)
-
-        # revert dummy label
-        target[mask] = 255
-
-        return loss
