@@ -10,10 +10,10 @@ from torchvision import datasets
 from tqdm import tqdm
 
 from dataloader import PartialDatasetVOC
-from logger import WBLogger
+from utils.logger import WBLogger
 import models
 from models.classifier import ConvMultiLinearClassifier, ConvSingleLinearClassifier
-import transforms as _transforms
+import utils.transforms as _transforms
 from utils import mIoU, MaskedCrossEntropyLoss, load_pretrained_weights
 from utils.scheduler import WarmStartCosineAnnealingLR
 

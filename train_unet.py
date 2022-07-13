@@ -10,10 +10,10 @@ from torchvision import datasets
 from tqdm import tqdm
 
 from dataloader import PartialDatasetVOC
-from logger import WBLogger
+from utils.logger import WBLogger
 import models
 from models.classifier import UNet
-import transforms as _transforms
+import utils.transforms as _transforms
 from utils import mIoU, MaskedCrossEntropyLoss
 
 
