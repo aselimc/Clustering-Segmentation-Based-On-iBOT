@@ -30,15 +30,7 @@ def main(args):
                                      n_blocks=args.n_blocks)
 
     ## TRAINING DATASET ##
-    train_transform = _transforms.Compose([
-        _transforms.RandomResizedCrop(224),
-        _transforms.RandomHorizontalFlip(),
-        _transforms.ToTensor(),
-        _transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
-        ] + ([_transforms.ToBinaryMask()] if args.segmentation == 'binary' else [])
-          + [_transforms.MergeContours()]
-    )
-    val_transform = _transforms.Compose([
+    transform = _transforms.Compose([
         _transforms.Resize(256, interpolation=_transforms.INTERPOLATION_BICUBIC),
         _transforms.CenterCrop(224),
         _transforms.ToTensor(),
@@ -47,13 +39,14 @@ def main(args):
           + [_transforms.MergeContours()]
     )
 
-    train_dataset = PartialDatasetVOC(percentage = args.percentage, root=args.root, image_set='train', download=False, transforms=train_transform)
+    train_dataset = PartialDatasetVOC(percentage = args.percentage, root=args.root, image_set='train', download=False, transforms=transform)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.workers)
-    val_dataset = datasets.VOCSegmentation(root=args.root, image_set='val', download=False, transforms=val_transform)
+    val_dataset = datasets.VOCSegmentation(root=args.root, image_set='val', download=False, transforms=transform)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size)
 
     knn_segmentator.fit(train_loader)
     mIoU = knn_segmentator.score(val_loader)
+    print(f'mean intersecion over union: {mIoU}')
 
 
 def parser_args():

@@ -98,7 +98,7 @@ class KNNSegmentator(nn.Module):
             top1.append(IoU(retrieved_neighbors[:, 0], target))
 
             progress_bar.update()
-        
+
         miou = torch.cat(top1, dim=0).mean()
 
         return miou.item()
