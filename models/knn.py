@@ -11,7 +11,8 @@ from utils import IoU
 
 class KNNSegmentator(nn.Module):
 
-    def __init__(self, backbone, 
+    def __init__(self, backbone,
+                 logger,
                  k=20,
                  num_classes=21,
                  feature='intermediate',
@@ -25,11 +26,9 @@ class KNNSegmentator(nn.Module):
 
         self.backbone = backbone
         self.n_blocks = n_blocks
-        self.sum_pool = nn.AvgPool2d(
-                            kernel_size=self.patch_size,
-                            stride=self.patch_size,
-                            divisor_override=1)
         self.unfold = nn.Unfold(kernel_size=self.patch_size, stride=self.patch_size)
+
+        self.logger = logger
 
         self.k = k
         self.num_classes = num_classes
@@ -71,7 +70,7 @@ class KNNSegmentator(nn.Module):
         top1 = []
 
         progress_bar = tqdm(total=len(loader))
-        for image, target in loader:
+        for idx, (image, target) in enumerate(loader):
             bs = image.size(0)
             
             if self.use_cuda:
@@ -112,11 +111,20 @@ class KNNSegmentator(nn.Module):
 
             top1.append(IoU(pred, target))
 
+            self.logger.log_segmentation(image[0], pred[0], target[0], step=idx, logit=False)
+
             progress_bar.update()
 
-        miou = torch.cat(top1, dim=0).mean()
+        top1 = torch.cat(top1, dim=0)
+        miou = torch.mean(top1).item()
+        iou_std = torch.std(top1).item()
 
-        return miou.item()
+        self.logger.log_scalar({
+                "mIoU": miou,
+                "IoU std": iou_std,
+            })
+
+        return miou.item(), iou_std.item()
 
     def extract_feature(self, images):
         if self.feature == 'intermediate':

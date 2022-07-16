@@ -7,11 +7,14 @@ from tqdm import tqdm
 from dataloader import PartialDatasetVOC
 import models
 from models import KNNSegmentator
+from utils.logger import WBLogger
 import utils.transforms as _transforms
 from utils import load_pretrained_weights
 
 
 def main(args):
+    logger = WBLogger(args)
+    
     # Loading the backbone
     backbone = models.__dict__[args.arch](
         patch_size=args.patch_size,
@@ -23,7 +26,8 @@ def main(args):
                             model_name=args.arch,
                             patch_size=args.patch_size)
 
-    knn_segmentator = KNNSegmentator(backbone, 
+    knn_segmentator = KNNSegmentator(backbone,
+                                     logger,
                                      k=args.n_neighbors,
                                      num_classes=2 if args.segmentation == 'binary' else 21,
                                      feature=args.feature,
