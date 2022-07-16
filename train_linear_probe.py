@@ -14,7 +14,7 @@ from utils.logger import WBLogger
 import models
 from models.classifier import ConvMultiLinearClassifier, ConvSingleLinearClassifier
 import utils.transforms as _transforms
-from utils import mIoU, MaskedCrossEntropyLoss, load_pretrained_weights
+from utils import mIoUWithLogits, MaskedCrossEntropyLoss, load_pretrained_weights
 from utils.scheduler import WarmStartCosineAnnealingLR
 
 
@@ -77,7 +77,7 @@ def validate(loader, backbone, classifier, logger, criterion, n_blocks):
         # mask contours: compute pixelwise dummy entropy loss then set it to 0.0
         loss = criterion(pred_logits, segmentation)
         val_loss.append(loss.item())
-        miou = mIoU(pred_logits, segmentation)
+        miou = mIoUWithLogits(pred_logits, segmentation)
         miou_arr.append(miou.item())
 
         if random_pic_select==idx:

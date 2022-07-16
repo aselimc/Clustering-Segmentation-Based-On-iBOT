@@ -14,7 +14,7 @@ from utils.logger import WBLogger
 import models
 from models.classifier import UNet
 import utils.transforms as _transforms
-from utils import mIoU, MaskedCrossEntropyLoss
+from utils import mIoUWithLogits, MaskedCrossEntropyLoss
 
 
 global_step = 0
@@ -60,7 +60,7 @@ def validate(loader, classifier, logger, criterion):
         # mask contours: compute pixelwise dummy entropy loss then set it to 0.0
         loss = criterion(pred_logits, segmentation)
         val_loss.append(loss.item())
-        miou = mIoU(pred_logits, segmentation)
+        miou = mIoUWithLogits(pred_logits, segmentation)
         miou_arr.append(miou.item())
 
         if random_pic_select==idx:

@@ -28,7 +28,7 @@ from torch import nn
 from PIL import ImageFilter, ImageOps, Image, ImageDraw
 
 from .losses import MaskedCrossEntropyLoss
-from .metrics import mIoU
+from .metrics import IoU, mIoUWithLogits
 
 
 class GaussianBlur(object):
