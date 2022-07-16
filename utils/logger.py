@@ -83,3 +83,7 @@ class WBLogger:
 
     def log_scalar(self, scalars, step):
         wandb.log(scalars, step=step)
+
+    def log_scalar_summary(self, scalars):
+        for key in scalars.keys():
+            wandb.run.summary[key] = scalars[key]

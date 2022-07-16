@@ -78,7 +78,7 @@ class KNNSegmentator(nn.Module):
                 target = target.cuda()
             
             test_feature = self.extract_feature(image).unsqueeze(3)
-            
+
             # patchwise cosine similarity between test feature & all train features
             # (bs x num_patches x embed_dim x 1) * (num_patches x embed_dim x num_train)
             similarity = (test_feature * self.train_features).sum(dim=2)
@@ -110,8 +110,13 @@ class KNNSegmentator(nn.Module):
             pred = torch.argmax(vote, dim=-1)
 
             top1.append(IoU(pred, target))
-
             self.logger.log_segmentation(image[0], pred[0], target[0], step=idx, logit=False)
+
+            # clean up memory for next iteration
+            del pred
+            del similarity
+            del retrieved_neighbors
+            del vote
 
             progress_bar.update()
 
@@ -119,10 +124,10 @@ class KNNSegmentator(nn.Module):
         miou = torch.mean(top1).item()
         iou_std = torch.std(top1).item()
 
-        self.logger.log_scalar({
+        self.logger.log_scalar_summary({
                 "mIoU": miou,
                 "IoU std": iou_std,
-            }, step=0)
+            })
 
         return miou, iou_std
 
