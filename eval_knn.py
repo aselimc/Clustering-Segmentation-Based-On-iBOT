@@ -49,8 +49,8 @@ def main(args):
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size)
 
     knn_segmentator.fit(train_loader)
-    mIoU = knn_segmentator.score(val_loader)
-    print(f'mean intersecion over union: {mIoU}')
+    miou, iou_std = knn_segmentator.score(val_loader)
+    print(f'mean intersecion over union: {miou} (±{iou_std}) ')
 
 
 def parser_args():
