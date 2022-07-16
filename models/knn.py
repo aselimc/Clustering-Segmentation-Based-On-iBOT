@@ -122,9 +122,9 @@ class KNNSegmentator(nn.Module):
         self.logger.log_scalar({
                 "mIoU": miou,
                 "IoU std": iou_std,
-            })
+            }, step=0)
 
-        return miou.item(), iou_std.item()
+        return miou, iou_std
 
     def extract_feature(self, images):
         if self.feature == 'intermediate':
