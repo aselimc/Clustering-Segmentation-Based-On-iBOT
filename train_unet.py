@@ -71,7 +71,7 @@ def validate(loader, classifier, logger, criterion):
 
 
 def main(args):
-    logger = WBLogger(args)
+    logger = WBLogger(args, group='linear_probe', job_type=args.arch)
 
     classifier = UNet(n_channels=3,
                       n_classes=2 if args.segmentation == 'binary' else 21,

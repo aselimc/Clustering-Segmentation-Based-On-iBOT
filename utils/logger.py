@@ -38,7 +38,11 @@ CLASS_LABELS_MULTI = {
 
 class WBLogger:
 
-    def __init__(self, args):
+    def __init__(self, args, 
+                 project="iBot",
+                 entity="dl_lab_enjoyers",
+                 group='linear_probe',
+                 job_type='vit_base'):
         if args.segmentation == "binary":
             self.class_labels = CLASS_LABELS_BINARY
         else:
@@ -47,8 +51,10 @@ class WBLogger:
         self.config = vars(args)
 
         wandb.init(
-        project="iBot",
-        entity="dl_lab_enjoyers",
+        project=project,
+        entity=entity,
+        group=group,
+        job_type=job_type,
         name=datetime.now().strftime('%m.%d.%Y-%H:%M:%S'),
         config=self.config)
 

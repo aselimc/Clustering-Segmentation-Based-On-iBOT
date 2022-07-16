@@ -13,8 +13,8 @@ from utils import load_pretrained_weights
 
 
 def main(args):
-    logger = WBLogger(args)
-    
+    logger = WBLogger(args, group='knn', job_type=args.arch)
+
     # Loading the backbone
     backbone = models.__dict__[args.arch](
         patch_size=args.patch_size,

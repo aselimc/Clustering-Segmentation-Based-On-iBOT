@@ -88,7 +88,7 @@ def validate(loader, backbone, classifier, logger, criterion, n_blocks):
 
 
 def main(args):
-    logger = WBLogger(args)
+    logger = WBLogger(args, group='linear_probe', job_type=args.arch)
 
     # Loading the backbone
     backbone = models.__dict__[args.arch](
