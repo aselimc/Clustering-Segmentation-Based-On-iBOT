@@ -52,11 +52,14 @@ class WBLogger:
         name=datetime.now().strftime('%m.%d.%Y-%H:%M:%S'),
         config=self.config)
 
-    def log_segmentation(self, img, pred_logits, segmentation, step):
+    def log_segmentation(self, img, pred, segmentation, step, logit=True):
+        if logit:
+            pred = torch.argmax(pred, dim=1).squeeze(0)
+        
         pred_segmentation = wandb.Image(img,
             masks={
                 "predictions": {
-                    "mask_data": torch.argmax(pred_logits, dim=1).squeeze(0).cpu().numpy(),
+                    "mask_data": pred.cpu().numpy(),
                     "class_labels": self.class_labels
                     }
                 })
