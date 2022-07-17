@@ -17,6 +17,7 @@ class KNNSegmentator(nn.Module):
                  num_classes=21,
                  feature='intermediate',
                  n_blocks=1,
+                 temperature=1.0,
                  use_cuda=True):
         """
         Args:
@@ -33,6 +34,7 @@ class KNNSegmentator(nn.Module):
         self.k = k
         self.num_classes = num_classes
         self.feature = feature
+        self.temperature = temperature
 
         self.use_cuda = use_cuda
         if use_cuda:
@@ -63,7 +65,7 @@ class KNNSegmentator(nn.Module):
                                    size=[self.img_size, self.img_size],
                                    mode='nearest',
                                    recompute_scale_factor=False)
-        similarity = similarity.permute(0, 2, 3, 1).unsqueeze(-1)
+        similarity = similarity.permute(0, 2, 3, 1).unsqueeze(-1) / self.temperature
         similarity = torch.softmax(similarity, dim=3)
 
         # voting

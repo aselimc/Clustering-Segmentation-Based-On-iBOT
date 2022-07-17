@@ -31,7 +31,8 @@ def main(args):
                                      k=args.n_neighbors,
                                      num_classes=2 if args.segmentation == 'binary' else 21,
                                      feature=args.feature,
-                                     n_blocks=args.n_blocks)
+                                     n_blocks=args.n_blocks,
+                                     temperature=args.temperature)
 
     ## TRAINING DATASET ##
     transform = _transforms.Compose([
@@ -66,6 +67,7 @@ def parser_args():
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument("--percentage", type=float, default=0.1)
     parser.add_argument("--segmentation", type=str, choices=['binary', 'multi'], default='multi')
+    parser.add_argument("--temperature", type=float, default=0.07)
     parser.add_argument("--eval_freq", type=int, default=5)
     parser.add_argument("--workers", type=int, default=4)
 
