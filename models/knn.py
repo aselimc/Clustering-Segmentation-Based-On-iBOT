@@ -131,11 +131,11 @@ class KNNSegmentator(nn.Module):
     def extract_feature(self, images):
         if self.feature == 'intermediate':
             intermediate_output = self.backbone.get_intermediate_layers(images, self.n_blocks)
-            feat = torch.stack(intermediate_output, dim=2)
-            feat = torch.mean(feat, dim=2)
-            feat = feat[:, 1:]
         else:
-            raise NotImplementedError
+            intermediate_output = self.backbone.get_qkv(images, self.n_blocks, out=self.feature)
+        feat = torch.stack(intermediate_output, dim=2)
+        feat = torch.mean(feat, dim=2)
+        feat = feat[:, 1:]
 
         return feat
 
