@@ -42,14 +42,15 @@ class KNNSegmentator(nn.Module):
 
     def forward(self, image):
         bs = image.size(0)
-        test_feature = self.extract_feature(image).unsqueeze(3)
+        test_feature = self.extract_feature(image)
 
         # patchwise cosine similarity between test feature & all train features
-        # (bs x num_patches x embed_dim x 1) * (num_patches x embed_dim x num_train)
-        similarity = (test_feature * self.train_features).sum(dim=2)
+        # (bs x num_patches x embed_dim) * (embed_dim x (num_patches * num_train))
+        similarity = torch.matmul(test_feature, self.train_features)
         similarity, indices = similarity.topk(self.k, largest=True, sorted=True)
         indices = indices.unsqueeze(2).expand(bs, self.num_patches, self.patch_size**2, self.k)
-        train_labels = self.train_labels.unsqueeze(0).expand(bs, self.num_patches, self.patch_size**2, -1)
+        train_labels = self.train_labels.unsqueeze(0).unsqueeze(0)
+        train_labels = train_labels.expand(bs, self.num_patches, self.patch_size**2, -1)
         retrieved_neighbors = torch.gather(train_labels, dim=3, index=indices)
 
         # tile label patches together -> (bs, k, 224, 224)
@@ -85,19 +86,20 @@ class KNNSegmentator(nn.Module):
             if self.use_cuda:
                 image = image.cuda()
             feat = self.extract_feature(image)
+            feat = feat.permute(2, 0, 1).flatten(start_dim=1)
             feat = feat.cpu()
             train_features.append(feat)
 
             # divide ground truth mask into patches
             target = self.unfold(target.unsqueeze(1).float())
-            target = target.permute(2, 1, 0)
+            target = target.permute(1, 0, 2).flatten(start_dim=1)
             target = target.byte().cpu()
             train_labels.append(target)
 
             progress_bar.update()
 
-        self.train_features = torch.cat(train_features, dim=0).permute(1, 2, 0)
-        self.train_labels = torch.cat(train_labels, dim=2)
+        self.train_features = torch.cat(train_features, dim=1)
+        self.train_labels = torch.cat(train_labels, dim=1)
 
     @torch.no_grad()
     def score(self, loader):
