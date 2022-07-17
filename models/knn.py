@@ -118,7 +118,8 @@ class KNNSegmentator(nn.Module):
             pred = self.forward(image)
             top1.append(IoU(pred, target))
 
-            self.logger.log_segmentation(image[0], pred[0], target[0], step=idx, logit=False)
+            if idx % self.logger.config['eval_freq'] == 0 or idx == len(loader):
+                self.logger.log_segmentation(image[0], pred[0], target[0], step=idx, logit=False)
             progress_bar.update()
 
         top1 = torch.cat(top1, dim=0)
