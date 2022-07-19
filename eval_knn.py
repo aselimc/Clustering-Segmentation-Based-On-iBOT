@@ -61,6 +61,7 @@ def parser_args():
     parser.add_argument('--arch', type=str, default="vit_base")
     parser.add_argument('--feature', type=str, choices=['intermediate', 'query', 'key', 'value'],
                         default='intermediate')
+    parser.add_argument('--patch_labeling', type=str, choices=['coarse', 'fine'], default='fine')
     parser.add_argument('--n_neighbors', type=int, default=20)
     parser.add_argument('--patch_size', type=int, default=16)
     parser.add_argument('--n_blocks', type=int, default=1)

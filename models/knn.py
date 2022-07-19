@@ -16,12 +16,14 @@ class KNNSegmentator(nn.Module):
                  k=20,
                  num_classes=21,
                  feature='intermediate',
+                 patch_labeling='coarse',
                  n_blocks=1,
                  temperature=1.0,
                  use_cuda=True):
         """
         Args:
             feature: 'intermediate', 'query', 'key', 'value'
+            patch_label: 'coarse', 'fine'
         """
         super(KNNSegmentator, self).__init__()
 
@@ -34,6 +36,7 @@ class KNNSegmentator(nn.Module):
         self.k = k
         self.num_classes = num_classes
         self.feature = feature
+        self.patch_labeling = patch_labeling
         self.temperature = temperature
 
         self.use_cuda = use_cuda
@@ -92,6 +95,12 @@ class KNNSegmentator(nn.Module):
 
             # divide ground truth mask into patches
             target = self.unfold(target.unsqueeze(1).float())
+            if self.patch_labeling == 'coarse':
+                target = target.permute(0, 2, 1).long()
+                target = F.one_hot(target, self.num_classes)
+                target = torch.argmax(target.sum(dim=2), dim=2)
+                target = target.unsqueeze(2).expand(-1, self.num_patches, self.patch_size**2)
+                target = target.permute(0, 2, 1)
             target = target.permute(1, 0, 2).flatten(start_dim=1)
             target = target.byte().cpu()
             train_labels.append(target)
