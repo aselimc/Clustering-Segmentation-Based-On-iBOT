@@ -86,7 +86,7 @@ def main(args):
         param.requires_grad = False
     # Dataset and Loader initializations
     train_dataset = PartialDatasetVOC(percentage = args.percentage, root=args.root, image_set='train', download=args.download_data, transforms=train_transform)
-    train_loader = DataLoader(train_dataset, batch_size=64, num_workers=4)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.n_workers)
     val_dataset = datasets.VOCSegmentation(root=args.root, image_set='val', download=False, transforms=val_transform)
     val_loader = DataLoader(val_dataset, batch_size=1, num_workers=4)
     
@@ -102,7 +102,7 @@ def main(args):
         cluster = Clustering(item, n_clusters=100)
         plot_dendrogram(cluster, truncate_mode="level", p=3)
         del cluster
-        plt.savefig(f"cluster_group_{idx}.png")
+        plt.savefig(f"cluster_graphs/cluster_group_{idx}.png")
         plt.clf()
         progress_bar.update()
 
@@ -118,6 +118,8 @@ def parser_args():
     parser.add_argument('--percentage', type=float, default=1)
     parser.add_argument('--download_data', type=bool, default=False)
     parser.add_argument('--n_chunks', type=int, default=20)
+    parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--n-workers', type=int, default=4)
     return parser.parse_args()
 
 
