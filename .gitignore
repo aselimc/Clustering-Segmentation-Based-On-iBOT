@@ -3,6 +3,8 @@ data
 work_dirs/
 work_dirs
 cluster_group_*
+wandb/
+wandb
 *.zip
 __pycache__/
 .*
