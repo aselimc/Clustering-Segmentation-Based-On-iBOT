@@ -8,6 +8,7 @@ from torchvision import datasets
 import argparse
 import numpy as np
 import models
+import tqdm as tqdm
 
 from matplotlib import pyplot as plt
 from scipy.cluster.hierarchy import dendrogram
@@ -95,12 +96,15 @@ def main(args):
         vit_output_list.append(vit_output.to("cpu"))
     vit_output = torch.cat(vit_output_list, dim=0)
 
-    vit_output = vit_output.chunk(20)
+    progress_bar = tqdm.tqdm(total=args.n_chunks)
+    vit_output = vit_output.chunk(args.n_chunks)
     for idx, item in enumerate(vit_output):
         cluster = Clustering(item, n_clusters=100)
         plot_dendrogram(cluster, truncate_mode="level", p=3)
         del cluster
         plt.savefig(f"cluster_group_{idx}.png")
+        plt.clf()
+        progress_bar.update()
 
 
 
@@ -113,6 +117,7 @@ def parser_args():
     parser.add_argument('--segmentation', type=str, choices=['binary', 'multi'], default='multi')
     parser.add_argument('--percentage', type=float, default=1)
     parser.add_argument('--download_data', type=bool, default=False)
+    parser.add_argument('--n_chunks', type=int, default=20)
     return parser.parse_args()
 
 
