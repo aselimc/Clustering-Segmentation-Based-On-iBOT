@@ -2,6 +2,7 @@ data/
 data
 work_dirs/
 work_dirs
+cluster_group_*
 *.zip
 __pycache__/
 .*

@@ -1,0 +1,25 @@
+2022-07-13 22:51:17,296 INFO    MainThread:3197331 [wandb_setup.py:_flush():76] Loading settings from /home/canakcia/.config/wandb/settings
+2022-07-13 22:51:17,297 INFO    MainThread:3197331 [wandb_setup.py:_flush():76] Loading settings from /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/settings
+2022-07-13 22:51:17,299 INFO    MainThread:3197331 [wandb_setup.py:_flush():76] Loading settings from environment variables: {}
+2022-07-13 22:51:17,300 INFO    MainThread:3197331 [wandb_setup.py:_flush():76] Inferring run settings from compute environment: {'program_relpath': 'train_linear_probe.py', 'program': '/project/dl2022s/canakcia/iBot-cv/iBot-cv/train_linear_probe.py'}
+2022-07-13 22:51:17,301 INFO    MainThread:3197331 [wandb_init.py:_log_setup():428] Logging user logs to /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/run-20220713_225117-ltjfrc7d/logs/debug.log
+2022-07-13 22:51:17,303 INFO    MainThread:3197331 [wandb_init.py:_log_setup():429] Logging internal logs to /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/run-20220713_225117-ltjfrc7d/logs/debug-internal.log
+2022-07-13 22:51:17,305 INFO    MainThread:3197331 [wandb_init.py:init():462] calling init triggers
+2022-07-13 22:51:17,306 INFO    MainThread:3197331 [wandb_init.py:init():465] wandb.init called with sweep_config: {}
+config: {'root': 'data', 'weights': 'weights/checkpoint.pth', 'arch': 'vit_large', 'classifier_type': 'ConvSingleLinear', 'patch_size': 16, 'epochs': 100, 'warmup_epochs': 10, 'n_blocks': 4, 'batch_size': 32, 'lr': 0.001, 'percentage': 0.1, 'upsample': 'nearest', 'segmentation': 'multi', 'eval_freq': 5, 'workers': 4}
+2022-07-13 22:51:17,309 INFO    MainThread:3197331 [wandb_init.py:init():515] starting backend
+2022-07-13 22:51:17,310 INFO    MainThread:3197331 [backend.py:_multiprocessing_setup():97] multiprocessing start_methods=fork,spawn,forkserver, using: spawn
+2022-07-13 22:51:17,356 INFO    MainThread:3197331 [backend.py:ensure_launched():217] starting backend process...
+2022-07-13 22:51:17,367 INFO    MainThread:3197331 [backend.py:ensure_launched():222] started backend process with pid: 3197430
+2022-07-13 22:51:17,370 INFO    MainThread:3197331 [wandb_init.py:init():525] backend started and connected
+2022-07-13 22:51:17,391 INFO    MainThread:3197331 [wandb_init.py:init():596] updated telemetry
+2022-07-13 22:51:17,425 INFO    MainThread:3197331 [wandb_init.py:init():627] communicating run to backend with 30 second timeout
+2022-07-13 22:51:20,898 INFO    MainThread:3197331 [wandb_run.py:_on_init():1924] communicating current version
+2022-07-13 22:51:20,985 INFO    MainThread:3197331 [wandb_run.py:_on_init():1928] got version response upgrade_message: "wandb version 0.12.21 is available!  To upgrade, please run:\n $ pip install wandb --upgrade"
+
+2022-07-13 22:51:20,985 INFO    MainThread:3197331 [wandb_init.py:init():662] starting run threads in backend
+2022-07-13 22:51:21,808 INFO    MainThread:3197331 [wandb_run.py:_console_start():1898] atexit reg
+2022-07-13 22:51:21,811 INFO    MainThread:3197331 [wandb_run.py:_redirect():1771] redirect: SettingsConsole.REDIRECT
+2022-07-13 22:51:21,812 INFO    MainThread:3197331 [wandb_run.py:_redirect():1776] Redirecting console.
+2022-07-13 22:51:21,823 INFO    MainThread:3197331 [wandb_run.py:_redirect():1832] Redirects installed.
+2022-07-13 22:51:21,824 INFO    MainThread:3197331 [wandb_init.py:init():688] run started, returning control to user process

@@ -1,0 +1,24 @@
+{
+    "os": "Linux-5.13.0-44-generic-x86_64-with-glibc2.29",
+    "python": "3.8.10",
+    "heartbeatAt": "2022-07-13T20:57:57.665827",
+    "startedAt": "2022-07-13T20:57:53.545218",
+    "docker": null,
+    "gpu": "NVIDIA GeForce GTX 1060 3GB",
+    "gpu_count": 1,
+    "cpu_count": 8,
+    "cuda": "10.0.130",
+    "args": [],
+    "state": "running",
+    "program": "/project/dl2022s/canakcia/iBot-cv/iBot-cv/train_linear_probe.py",
+    "codePath": "train_linear_probe.py",
+    "git": {
+        "remote": "https://aselimc:@github.com/aselimc/iBot-cv.git",
+        "commit": "f96b53db6c2bd7818bb0a42186caa088d2a6b3ad"
+    },
+    "email": "asc.connected@gmail.com",
+    "root": "/project/dl2022s/canakcia/iBot-cv/iBot-cv",
+    "host": "tfpool63",
+    "username": "canakcia",
+    "executable": "/project/dl2022s/canakcia/cv/bin/python"
+}
