@@ -44,16 +44,14 @@ def plot_dendrogram(model, **kwargs):
     dendrogram(linkage_matrix, **kwargs)
 
 # We fit data, we fit labeled data, and we label clusters
-def Clustering( vit_output: torch.Tensor, n_classes: int, s_label: List):
+def Clustering( vit_output: torch.Tensor, n_classes: int, real_labels: List, start, stop, step):
     # Creating clustering tree
-    start = 42
-    step = 2
-    stop = 100
+
     vit_output = vit_output[:, 1:, :]
     vit_output = vit_output.reshape( -1, vit_output.shape[2]).contiguous().detach().cpu()
-    s_label = s_label.reshape( -1)
-    s_label_idx = np.random.randint(low=0, high=len(s_label), size=len(s_label)//10)
-    s_label = s_label[s_label_idx]
+    real_labels = real_labels.reshape( -1)
+    s_label_idx = np.random.randint(low=0, high=len(real_labels), size=len(real_labels)//10)
+    s_label = real_labels[s_label_idx]
     labels = np.empty(shape=vit_output.shape[0], dtype="U100")
     labels[s_label_idx] = s_label
     purities = iteration_over_clusters(vit_output, labels, s_label_idx, start, stop, step)
@@ -62,6 +60,7 @@ def Clustering( vit_output: torch.Tensor, n_classes: int, s_label: List):
 
     cluster = AgglomerativeClustering(n_clusters=best_cluster, compute_distances=True)
     cluster = cluster.fit(vit_output)
+    labels_entire_trainset = majority_labeller(cluster, best_cluster, s_label_idx, labels)
     return cluster
 
 def BirchClustering(vit_output, n_clusters):
@@ -121,18 +120,12 @@ def main(args):
     label = torch.cat(label_list, dim=0)
 
     if args.cluster_algo == "agglo":
-        progress_bar = tqdm.tqdm(total=args.n_chunks)
         vit_output = vit_output.chunk(args.n_chunks)
         label = label.chunk(args.n_chunks)
-        for idx, item in enumerate(vit_output):
-            labels = label[idx]
-            n_label, s_label = LabelPatches(labels, patch_size=args.patch_size)
-            cluster = Clustering(item, n_classes=21, s_label = s_label)
-            plot_dendrogram(cluster, truncate_mode="level", p=3)
-            del cluster
-            plt.savefig(f"cluster_graphs/cluster_group_{idx}.png")
-            plt.clf()
-            progress_bar.update()
+        labels = label[0]
+        item = vit_output[0]
+        n_label, s_label = LabelPatches(labels, patch_size=args.patch_size)
+        cluster = Clustering(item, n_classes=21, s_label = s_label, args.n_cluster_start, args.n_cluster_stop, args.n_cluster_step) 
     else :
         progress_bar = tqdm.tqdm(total=args.n_chunks)
         vit_output = vit_output.chunk(args.n_chunks)
@@ -152,8 +145,11 @@ def parser_args():
     parser.add_argument('--download_data', type=bool, default=False)
     parser.add_argument('--n_chunks', type=int, default=40)
     parser.add_argument('--batch_size', type=int, default=64)
-    parser.add_argument('--n-workers', type=int, default=4)
+    parser.add_argument('--n_workers', type=int, default=4)
     parser.add_argument('--cluster_algo', type=str, choices=['agglo', 'birch'], default='agglo')
+    parser.add_argument('--n_cluster_start', type=int, default=42)
+    parser.add_argument('--n_cluster_stop', type=int, default=100)
+    parser.add_argument('--n_cluster_step', type=int, default=2)
     return parser.parse_args()
 
 

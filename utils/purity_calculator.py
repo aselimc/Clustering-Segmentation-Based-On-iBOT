@@ -36,7 +36,21 @@ def iteration_over_clusters(data, labels, label_idx, start, stop, step):
 
 def best_cluster_count(purities, start, step):
     return start + step*np.argmax(purities)
-        
+
+
+def majority_labeller(cluster, n_cluster, label_idx, label_names):
+    label_names = np.array(label_names)
+    labels = np.empty_like(cluster.labels_, dtype='U100')
+    for i in range(n_cluster):
+        idx = np.where(cluster.labels_==i)
+        l_idx = np.intersect1d(idx, label_idx)
+        labels_for_cluster= label_names[l_idx]
+        classes, counters = np.unique(labels_for_cluster, return_counts=True)
+        maxx =np.argmax(counters)
+        majority = classes[maxx]
+        labels[idx] = majority
+    return labels
+    
 if __name__ == '__main__':
     x = torch.Tensor([[-0.1154],
         [-0.7554],
