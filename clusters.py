@@ -1,5 +1,6 @@
+from typing import List
 from matplotlib.pyplot import grid
-from sklearn.cluster import AgglomerativeClustering
+from sklearn.cluster import AgglomerativeClustering, Birch
 
 import torch
 from torch.utils.data import DataLoader
@@ -15,6 +16,8 @@ from scipy.cluster.hierarchy import dendrogram
 from dataloader import PartialDatasetVOC
 from utils import load_pretrained_weights
 import utils.transforms as _transforms
+from utils.patch_labeller import LabelPatches
+from utils.purity_calculator import best_cluster_count, iteration_over_clusters
 
 
 
@@ -41,17 +44,33 @@ def plot_dendrogram(model, **kwargs):
     dendrogram(linkage_matrix, **kwargs)
 
 # We fit data, we fit labeled data, and we label clusters
-def Clustering( vit_output: torch.Tensor, n_clusters: int):
+def Clustering( vit_output: torch.Tensor, n_classes: int, s_label: List):
     # Creating clustering tree
     # bs, z, x, y = vit_output.shape
     vit_output = vit_output[:, 1:, :]
     vit_output = vit_output.reshape( -1, vit_output.shape[2]).contiguous().detach().cpu()
-
+    s_label = s_label.reshape( -1)
+    s_label_idx = np.random.randint(low=0, high=len(s_label), size=len(s_label)//10)
+    s_label = s_label[s_label_idx]
+    labels = np.empty(shape=vit_output.shape[0], dtype="U100")
+    labels[s_label_idx] = s_label
+    purities = iteration_over_clusters(n_classes,vit_output, labels, s_label_idx)
     
-    cluster = AgglomerativeClustering(n_clusters=n_clusters, compute_distances=True)
+    best_cluster = best_cluster_count(purities)
+
+    cluster = AgglomerativeClustering(n_clusters=best_cluster, compute_distances=True)
     cluster = cluster.fit(vit_output)
     return cluster
 
+def BirchClustering(vit_output, n_clusters):
+    vit_output = vit_output[:, 1:, :]
+    vit_output = vit_output.reshape( -1, vit_output.shape[2]).contiguous().detach().cpu()
+
+    
+    cluster = Birch(n_clusters=n_clusters)
+
+    cluster = cluster.fit(vit_output)
+    return cluster
 
 def main(args):
     backbone = models.__dict__[args.arch](
@@ -91,20 +110,32 @@ def main(args):
     val_loader = DataLoader(val_dataset, batch_size=1, num_workers=4)
     
     vit_output_list = []
+    label_list = []
     for img, label in train_loader:
         vit_output = backbone.get_intermediate_layers(img.cuda(), n=1)[0]
         vit_output_list.append(vit_output.to("cpu"))
+        label_list.append(label.to("cpu"))
     vit_output = torch.cat(vit_output_list, dim=0)
+    label = torch.cat(label_list, dim=0)
 
-    progress_bar = tqdm.tqdm(total=args.n_chunks)
-    vit_output = vit_output.chunk(args.n_chunks)
-    for idx, item in enumerate(vit_output):
-        cluster = Clustering(item, n_clusters=100)
-        plot_dendrogram(cluster, truncate_mode="level", p=3)
-        del cluster
-        plt.savefig(f"cluster_graphs/cluster_group_{idx}.png")
-        plt.clf()
-        progress_bar.update()
+    if args.cluster_algo == "agglo":
+        progress_bar = tqdm.tqdm(total=args.n_chunks)
+        vit_output = vit_output.chunk(args.n_chunks)
+        label = label.chunk(args.n_chunks)
+        for idx, item in enumerate(vit_output):
+            labels = label[idx]
+            n_label, s_label = LabelPatches(labels, patch_size=args.patch_size)
+            cluster = Clustering(item, n_classes=21, s_label = s_label)
+            plot_dendrogram(cluster, truncate_mode="level", p=3)
+            del cluster
+            plt.savefig(f"cluster_graphs/cluster_group_{idx}.png")
+            plt.clf()
+            progress_bar.update()
+    else :
+        progress_bar = tqdm.tqdm(total=args.n_chunks)
+        vit_output = vit_output.chunk(args.n_chunks)
+        for idx, item in enumerate(vit_output):
+            cluster = BirchClustering(item, n_clusters=100)
 
 
 
@@ -117,9 +148,10 @@ def parser_args():
     parser.add_argument('--segmentation', type=str, choices=['binary', 'multi'], default='multi')
     parser.add_argument('--percentage', type=float, default=1)
     parser.add_argument('--download_data', type=bool, default=False)
-    parser.add_argument('--n_chunks', type=int, default=20)
+    parser.add_argument('--n_chunks', type=int, default=40)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--n-workers', type=int, default=4)
+    parser.add_argument('--cluster_algo', type=str, choices=['agglo', 'birch'], default='agglo')
     return parser.parse_args()
 
 
