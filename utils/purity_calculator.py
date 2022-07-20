@@ -23,8 +23,8 @@ def calculate_purity(c_labels, i, label_idx, label_names):
 
 
 
-def iteration_over_clusters(n_classes, data, labels, label_idx, step_size=1):
-    r = range(n_classes, n_classes*2, step_size)
+def iteration_over_clusters(data, labels, label_idx, start, stop, step):
+    r = range(start, stop, step)
     purities  = []
     for i in r:
         cluster = AgglomerativeClustering(n_clusters=i, compute_distances=True)

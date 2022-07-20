@@ -46,7 +46,9 @@ def plot_dendrogram(model, **kwargs):
 # We fit data, we fit labeled data, and we label clusters
 def Clustering( vit_output: torch.Tensor, n_classes: int, s_label: List):
     # Creating clustering tree
-    # bs, z, x, y = vit_output.shape
+    start = 42
+    step = 2
+    stop = 100
     vit_output = vit_output[:, 1:, :]
     vit_output = vit_output.reshape( -1, vit_output.shape[2]).contiguous().detach().cpu()
     s_label = s_label.reshape( -1)
@@ -54,9 +56,9 @@ def Clustering( vit_output: torch.Tensor, n_classes: int, s_label: List):
     s_label = s_label[s_label_idx]
     labels = np.empty(shape=vit_output.shape[0], dtype="U100")
     labels[s_label_idx] = s_label
-    purities = iteration_over_clusters(n_classes,vit_output, labels, s_label_idx)
+    purities = iteration_over_clusters(vit_output, labels, s_label_idx, start, stop, step)
     
-    best_cluster = best_cluster_count(purities)
+    best_cluster = best_cluster_count(purities, start, step)
 
     cluster = AgglomerativeClustering(n_clusters=best_cluster, compute_distances=True)
     cluster = cluster.fit(vit_output)
