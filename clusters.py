@@ -17,7 +17,7 @@ from dataloader import PartialDatasetVOC
 from utils import load_pretrained_weights
 import utils.transforms as _transforms
 from utils.patch_labeller import LabelPatches
-from utils.purity_calculator import best_cluster_count, iteration_over_clusters
+from utils.purity_calculator import best_cluster_count, iteration_over_clusters, majority_labeller
 
 
 
@@ -125,7 +125,13 @@ def main(args):
         labels = label[0]
         item = vit_output[0]
         n_label, s_label = LabelPatches(labels, patch_size=args.patch_size)
-        cluster = Clustering(item, n_classes=21, s_label = s_label, args.n_cluster_start, args.n_cluster_stop, args.n_cluster_step) 
+
+        cluster=Clustering(item,
+                            n_classes=21,
+                            real_labels = s_label,
+                            start = args.n_cluster_start, 
+                            stop = args.n_cluster_stop, 
+                            step = args.n_cluster_step) 
     else :
         progress_bar = tqdm.tqdm(total=args.n_chunks)
         vit_output = vit_output.chunk(args.n_chunks)
@@ -147,8 +153,8 @@ def parser_args():
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--n_workers', type=int, default=4)
     parser.add_argument('--cluster_algo', type=str, choices=['agglo', 'birch'], default='agglo')
-    parser.add_argument('--n_cluster_start', type=int, default=42)
-    parser.add_argument('--n_cluster_stop', type=int, default=100)
+    parser.add_argument('--n_cluster_start', type=int, default=70)
+    parser.add_argument('--n_cluster_stop', type=int, default=80)
     parser.add_argument('--n_cluster_step', type=int, default=2)
     return parser.parse_args()
 
