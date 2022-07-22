@@ -96,7 +96,7 @@ def equal_random_selector(real_labels):
     counter_dict = dict.fromkeys(REVERSED_LABELS, 0)
     maxx = 200
     print(f"Length of real labels {len(real_labels)}")
-    while len(selected_idx) < len(real_labels)//5:
+    while len(selected_idx) < len(real_labels)//10:
         rs = np.random.randint(low=0, high=len(real_labels))
         random_selection = real_labels[rs]
         if counter_dict[random_selection] < maxx:
