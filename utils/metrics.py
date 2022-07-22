@@ -2,9 +2,10 @@ import numpy as np
 import torch
 
 
-def mIoU(pred, label, num_classes=21):
-    pred = torch.softmax(pred.float(), dim=1)              
-    pred = torch.argmax(pred, dim=1).squeeze(1)
+def mIoU(pred, label, num_classes=21, no_softmax = True):
+    if no_softmax:
+        pred = torch.softmax(pred.float(), dim=1)              
+        pred = torch.argmax(pred, dim=1).squeeze(1)
     iou_list = list()
     present_iou_list = list()
 

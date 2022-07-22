@@ -2,6 +2,7 @@ from sklearn.cluster import AgglomerativeClustering
 import numpy as np
 from utils.logger import CLASS_LABELS_MULTI
 import torch
+from scipy.spatial import distance
 
 REVERSED_LABELS = dict(map(reversed, CLASS_LABELS_MULTI.items()))
 
@@ -44,19 +45,61 @@ def majority_labeller(cluster, n_cluster, label_idx, label_names):
     for i in range(n_cluster):
         idx = np.where(cluster.labels_==i)
         l_idx = np.intersect1d(idx, label_idx)
-        labels_for_cluster= label_names[l_idx]
-        classes, counters = np.unique(labels_for_cluster, return_counts=True)
-        maxx =np.argmax(counters)
-        majority = classes[maxx]
-        labels[idx] = majority
+        if len(l_idx) == 0:
+            majority = classes[0]
+        else:
+            labels_for_cluster= label_names[l_idx]
+            classes, counters = np.unique(labels_for_cluster, return_counts=True)
+            maxx =np.argmax(counters)
+            majority = classes[maxx]
+            labels[idx] = majority
     return labels
     
 def get_class_means(vit_output, labels):
-    count_dict = dict.fromkeys(REVERSED_LABELS.keys())
+    mean_dict = dict.fromkeys(REVERSED_LABELS.keys(), np.zeros(shape=(vit_output.shape[1],)))
     for i in REVERSED_LABELS.keys():
         idx = np.where(i == labels)
-        count_dict[i] += np.mean(vit_output[idx], axis=0)
+        idx = np.array(vit_output[idx])
+        if len(idx) == 0:
+            mean_dict[i] = np.zeros(shape=(vit_output.shape[1],))
+        else:
+            mean_dict[i] = np.mean(idx, axis=0)
+    return mean_dict
 
+def predict(class_means, test):
+    image_labels = torch.zeros(size=(test.shape[0], ))
+    for idx, patches in enumerate(test):
+        patch_guess = np.zeros(shape=len(class_means.keys()))
+        label = ""
+        d = 9999999
+        for key in class_means:
+            if key =="contours":
+                pass
+            dst = distance.euclidean(patches, class_means[key])
+            if dst < d:
+                d = dst
+                label = key
+        patch_guess[REVERSED_LABELS[label]] += 1
+        label = np.argmax(patch_guess)
+        image_labels[idx] = label
+    h = int(np.sqrt(test.shape[0]))
+    image_labels = image_labels.view(1, 1, h,h)
+    image_labels = torch.nn.functional.interpolate(image_labels, size=[224, 224])
+    return image_labels
+
+
+def equal_random_selector(real_labels):
+    selected_idx = []
+    counter_dict = dict.fromkeys(REVERSED_LABELS, 0)
+    maxx = 200
+    while len(selected_idx) < len(real_labels)//5:
+        rs = np.random.randint(low=0, high=len(real_labels))
+        random_selection = real_labels[rs]
+        if counter_dict[random_selection] < maxx:
+            counter_dict[random_selection] += 1
+            selected_idx.append(rs)
+
+    return selected_idx
 if __name__ == '__main__':
     x = torch.Tensor([[-0.1154],
         [-0.7554],
