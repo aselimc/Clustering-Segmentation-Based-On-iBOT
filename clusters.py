@@ -17,7 +17,7 @@ from dataloader import PartialDatasetVOC
 from utils import load_pretrained_weights
 import utils.transforms as _transforms
 from utils.patch_labeller import LabelPatches
-from utils.purity_calculator import best_cluster_count, iteration_over_clusters, majority_labeller
+from utils.purity_calculator import best_cluster_count, get_class_means, iteration_over_clusters, majority_labeller
 
 
 
@@ -61,6 +61,7 @@ def Clustering( vit_output: torch.Tensor, n_classes: int, real_labels: List, sta
     cluster = AgglomerativeClustering(n_clusters=best_cluster, compute_distances=True)
     cluster = cluster.fit(vit_output)
     labels_entire_trainset = majority_labeller(cluster, best_cluster, s_label_idx, labels)
+    class_means = get_class_means(vit_output, labels_entire_trainset)
     return cluster
 
 def BirchClustering(vit_output, n_clusters):
@@ -149,7 +150,7 @@ def parser_args():
     parser.add_argument('--segmentation', type=str, choices=['binary', 'multi'], default='multi')
     parser.add_argument('--percentage', type=float, default=1)
     parser.add_argument('--download_data', type=bool, default=False)
-    parser.add_argument('--n_chunks', type=int, default=40)
+    parser.add_argument('--n_chunks', type=int, default=20)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--n_workers', type=int, default=4)
     parser.add_argument('--cluster_algo', type=str, choices=['agglo', 'birch'], default='agglo')
