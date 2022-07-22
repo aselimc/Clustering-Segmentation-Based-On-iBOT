@@ -185,7 +185,7 @@ def parser_args():
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--n_workers', type=int, default=4)
     parser.add_argument('--n_cluster_start', type=int, default=40)
-    parser.add_argument('--n_cluster_stop', type=int, default=48)
+    parser.add_argument('--n_cluster_stop', type=int, default=100)
     parser.add_argument('--n_cluster_step', type=int, default=4)
     return parser.parse_args()
 
