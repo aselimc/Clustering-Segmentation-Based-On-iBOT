@@ -186,14 +186,13 @@ def main(args):
     for epoch in range(args.epochs):
 
         # Validation 
-        '''if epoch % args.eval_freq == 0 or epoch == (args.epochs - 1):
+        if epoch % args.eval_freq == 0 or epoch == (args.epochs - 1):
             miou, loss = validate(val_loader, backbone, classifier, logger, criterion, n_blocks)
             print(f"Validation for epoch {epoch}: Average mIoU {miou}, Average Loss {loss}")
             logger.log_scalar({
                 "val_loss": loss,
                 "val_miou": miou,
             }, step=global_step)
-'''
         mean_loss = train(train_loader, backbone, classifier, logger, criterion, optimizer, n_blocks)
         print(f"For epoch number {epoch} --> Average Loss {mean_loss:.2f}")
         logger.log_scalar({

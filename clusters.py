@@ -9,18 +9,20 @@ from torchvision import datasets
 import argparse
 import numpy as np
 import models
-import tqdm as tqdm
+from tqdm import tqdm
 
 from matplotlib import pyplot as plt
 from scipy.cluster.hierarchy import dendrogram
 from dataloader import PartialDatasetVOC
 from utils import load_pretrained_weights
+from utils.logger import WBLogger
 from utils.metrics import mIoU
 import utils.transforms as _transforms
 from utils.patch_labeller import LabelPatches
 from utils.purity_calculator import *
 
-
+global global_step
+global_step = 0
 
 def plot_dendrogram(model, **kwargs):
     # Create linkage matrix and then plot the dendrogram
@@ -45,7 +47,7 @@ def plot_dendrogram(model, **kwargs):
     dendrogram(linkage_matrix, **kwargs)
 
 # We fit data, we fit labeled data, and we label clusters
-def Clustering( vit_output: torch.Tensor, n_classes: int, real_labels: List, start, stop, step):
+def Clustering( vit_output: torch.Tensor, real_labels: List, start, stop, step, logger):
     # Creating clustering tree
 
     vit_output = vit_output[:, 1:, :]
@@ -55,22 +57,21 @@ def Clustering( vit_output: torch.Tensor, n_classes: int, real_labels: List, sta
     s_label = real_labels[s_label_idx]
     labels = np.empty(shape=vit_output.shape[0], dtype="U100")
     labels[s_label_idx] = s_label
-    purities = iteration_over_clusters(vit_output, labels, s_label_idx, start, stop, step)
+    print("Trying different number of clusters to find optimal one")
+    purities = iteration_over_clusters(vit_output, labels, s_label_idx, start, stop, step, logger)
     
     best_cluster = best_cluster_count(purities, start, step)
-
+    print(f"Best number of cluster that has been found is {best_cluster}")
     cluster = AgglomerativeClustering(n_clusters=best_cluster, compute_distances=True)
     cluster = cluster.fit(vit_output)
     labels_entire_trainset = majority_labeller(cluster, best_cluster, s_label_idx, labels)
     class_means = get_class_means(vit_output, labels_entire_trainset)
     return class_means
 
-def validate(loader, class_means, backbone):
+def validate(loader, class_means, backbone, logger):
     backbone.eval()
-    val_loss = []
     miou_arr = []
-    random_pic_select = np.random.randint(len(loader))
-    progress_bar = tqdm.tqdm(total=len(loader))
+    progress_bar = tqdm(total=len(loader))
 
     for idx, (img, segmentation) in enumerate(loader):
         img = img.cuda()
@@ -81,8 +82,12 @@ def validate(loader, class_means, backbone):
             image_labels = predict(class_means, vit_output)
             miou = mIoU(image_labels, segmentation, no_softmax=False)
             miou_arr.append(miou)
+            progress_bar.update()
+            if idx % 5 ==0:
+                logger.log_cluster_segmentation(img[0], image_labels, segmentation, idx)
     mean = np.mean(np.array(miou_arr))
-    print(f"For validation set the average miou is {mean}")
+    print(f"For validation set the average miou is {mean:.2f}")
+    return mean
             
 
 def BirchClustering(vit_output, n_clusters):
@@ -96,6 +101,10 @@ def BirchClustering(vit_output, n_clusters):
     return cluster
 
 def main(args):
+    global global_step
+    logger = WBLogger(args)
+
+
     backbone = models.__dict__[args.arch](
         patch_size=args.patch_size,
         num_classes=0
@@ -141,26 +150,25 @@ def main(args):
     vit_output = torch.cat(vit_output_list, dim=0)
     label = torch.cat(label_list, dim=0)
 
-    if args.cluster_algo == "agglo":
-        vit_output = vit_output.chunk(args.n_chunks)
-        label = label.chunk(args.n_chunks)
-        labels = label[0]
-        item = vit_output[0]
-        n_label, s_label = LabelPatches(labels, patch_size=args.patch_size)
+    vit_output = vit_output.chunk(args.n_chunks)
+    label = label.chunk(args.n_chunks)
+    
+    progressbar = tqdm(total=args.n_chunks)
+    for item, labels in zip(vit_output, label):
+        global_step += 1
+        _, s_label = LabelPatches(labels, patch_size=args.patch_size)
 
         class_means=Clustering(item,
-                            n_classes=21,
                             real_labels = s_label,
                             start = args.n_cluster_start, 
                             stop = args.n_cluster_stop, 
-                            step = args.n_cluster_step)
-        validate(val_loader, class_means, backbone)
-        
-    else :
-        progress_bar = tqdm.tqdm(total=args.n_chunks)
-        vit_output = vit_output.chunk(args.n_chunks)
-        for idx, item in enumerate(vit_output):
-            cluster = BirchClustering(item, n_clusters=100)
+                            step = args.n_cluster_step,
+                            logger= logger)
+        miou = validate(val_loader, class_means, backbone, logger)
+        logger.log_scalar({"val_miou": miou,
+            }, step=global_step)
+        progressbar.update()
+
 
 
 
@@ -173,13 +181,12 @@ def parser_args():
     parser.add_argument('--segmentation', type=str, choices=['binary', 'multi'], default='multi')
     parser.add_argument('--percentage', type=float, default=1)
     parser.add_argument('--download_data', type=bool, default=False)
-    parser.add_argument('--n_chunks', type=int, default=15)
+    parser.add_argument('--n_chunks', type=int, default=40)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--n_workers', type=int, default=4)
-    parser.add_argument('--cluster_algo', type=str, choices=['agglo', 'birch'], default='agglo')
-    parser.add_argument('--n_cluster_start', type=int, default=76)
-    parser.add_argument('--n_cluster_stop', type=int, default=80)
-    parser.add_argument('--n_cluster_step', type=int, default=2)
+    parser.add_argument('--n_cluster_start', type=int, default=40)
+    parser.add_argument('--n_cluster_stop', type=int, default=48)
+    parser.add_argument('--n_cluster_step', type=int, default=4)
     return parser.parse_args()
 
 

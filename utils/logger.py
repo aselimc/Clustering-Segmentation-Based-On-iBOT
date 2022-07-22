@@ -1,4 +1,5 @@
 from datetime import datetime
+from this import d
 
 import torch
 import wandb
@@ -72,5 +73,26 @@ class WBLogger:
             "GT Segmentation": gt_segmentation},
             step=step)
 
+    def log_cluster_segmentation(self, img, preds, segmentation, step):
+        pred_segmentation = wandb.Image(img,
+            masks={
+                "predictions": {
+                    "mask_data": preds.squeeze().squeeze().cpu().numpy(),
+                    "class_labels": self.class_labels
+                    }
+                })
+        gt_segmentation = wandb.Image(img,
+            masks={
+                "ground_truth": {
+                    "mask_data": segmentation.squeeze(0).cpu().numpy(),
+                    "class_labels": self.class_labels
+                    }
+                })
+        wandb.log({
+            "Pred Segmentation": pred_segmentation,
+            "GT Segmentation": gt_segmentation},
+            step=step)
+
     def log_scalar(self, scalars, step):
         wandb.log(scalars, step=step)
+    

@@ -3,6 +3,7 @@ import numpy as np
 from utils.logger import CLASS_LABELS_MULTI
 import torch
 from scipy.spatial import distance
+from tqdm import tqdm
 
 REVERSED_LABELS = dict(map(reversed, CLASS_LABELS_MULTI.items()))
 
@@ -24,14 +25,15 @@ def calculate_purity(c_labels, i, label_idx, label_names):
 
 
 
-def iteration_over_clusters(data, labels, label_idx, start, stop, step):
+def iteration_over_clusters(data, labels, label_idx, start, stop, step, logger):
     r = range(start, stop, step)
     purities  = []
     for i in r:
         cluster = AgglomerativeClustering(n_clusters=i, compute_distances=True)
         cluster = cluster.fit(data)
-        
-        purities.append(calculate_purity(cluster.labels_, i, label_idx, labels))
+        p = calculate_purity(cluster.labels_, i, label_idx, labels)
+        print(f"# Of Clusters:{i} ---- > Purity: {p}")
+        purities.append(p)
     
     return np.array(purities)
 
