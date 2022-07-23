@@ -71,7 +71,6 @@ def get_class_means(vit_output, labels):
 def predict(class_means, test):
     image_labels = torch.zeros(size=(test.shape[0], ))
     for idx, patches in enumerate(test):
-        patch_guess = np.zeros(shape=len(class_means.keys()))
         label = ""
         d = 9999999
         for key in class_means:
@@ -82,11 +81,7 @@ def predict(class_means, test):
                 d = dst
                 label = key
         temp = REVERSED_LABELS[label]
-        if temp == 255:
-            temp =21
-        patch_guess[temp] += 1
-        label = np.argmax(patch_guess)
-        image_labels[idx] = label
+        image_labels[idx] = temp
     h = int(np.sqrt(test.shape[0]))
     image_labels = image_labels.view(1, 1, h,h)
     image_labels = torch.nn.functional.interpolate(image_labels, size=[224, 224])
@@ -97,7 +92,7 @@ def equal_random_selector(real_labels):
     # print("Equal Random Selection Started")
     selected_idx = []
     counter_dict = dict.fromkeys(REVERSED_LABELS, 0)
-    maxx = 200
+    maxx = 500
 
     # print(f"Length of real labels {len(real_labels)}")
     while len(selected_idx) < len(real_labels)//10:

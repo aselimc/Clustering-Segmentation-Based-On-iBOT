@@ -52,7 +52,8 @@ def Clustering( vit_output: torch.Tensor, real_labels: List, start, stop, step, 
     vit_output = vit_output[:, 1:, :]
     vit_output = vit_output.reshape( -1, vit_output.shape[2]).contiguous().detach().cpu()
     real_labels = real_labels.reshape( -1)
-    s_label_idx = equal_random_selector(real_labels)
+    # s_label_idx = equal_random_selector(real_labels)
+    s_label_idx = np.arange(len(real_labels))
     s_label = real_labels[s_label_idx]
     labels = np.empty(shape=vit_output.shape[0], dtype="U100")
     labels[s_label_idx] = s_label
@@ -62,8 +63,8 @@ def Clustering( vit_output: torch.Tensor, real_labels: List, start, stop, step, 
     # best_cluster = best_cluster_count(purities, start, step)
     # print(f"Best number of cluster that has been found is {best_cluster}")
     best_cluster = 80
-    cluster = AgglomerativeClustering(n_clusters=best_cluster, affinity="cosine",
-                                      compute_full_tree=False, linkage="single", compute_distances=True)
+    cluster = AgglomerativeClustering(n_clusters=best_cluster, affinity="euclidean",
+                                      compute_full_tree=False, linkage="ward", compute_distances=True)
     cluster = cluster.fit(vit_output)
     labels_entire_trainset = majority_labeller(cluster, best_cluster, s_label_idx, labels)
     class_means = get_class_means(vit_output, labels_entire_trainset)
@@ -187,7 +188,7 @@ def parser_args():
     parser.add_argument('--segmentation', type=str, choices=['binary', 'multi'], default='multi')
     parser.add_argument('--percentage', type=float, default=1)
     parser.add_argument('--download_data', type=bool, default=False)
-    parser.add_argument('--n_chunks', type=int, default=15)
+    parser.add_argument('--n_chunks', type=int, default=10)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--n_workers', type=int, default=4)
     parser.add_argument('--n_cluster_start', type=int, default=96)
