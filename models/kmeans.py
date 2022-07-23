@@ -1,5 +1,4 @@
 import numpy as np
-from sklearn import cluster
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
