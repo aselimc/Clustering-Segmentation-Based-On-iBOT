@@ -48,13 +48,13 @@ def majority_labeller(cluster, n_cluster, label_idx, label_names):
         idx = np.where(cluster.labels_==i)
         l_idx = np.intersect1d(idx, label_idx)
         if len(l_idx) == 0:
-            majority = classes[0]
+            majority = "background"
         else:
             labels_for_cluster= label_names[l_idx]
             classes, counters = np.unique(labels_for_cluster, return_counts=True)
             maxx =np.argmax(counters)
             majority = classes[maxx]
-            labels[idx] = majority
+        labels[idx] = majority
     return labels
     
 def get_class_means(vit_output, labels):
@@ -81,7 +81,10 @@ def predict(class_means, test):
             if dst < d:
                 d = dst
                 label = key
-        patch_guess[REVERSED_LABELS[label]] += 1
+        temp = REVERSED_LABELS[label]
+        if temp == 255:
+            temp =21
+        patch_guess[temp] += 1
         label = np.argmax(patch_guess)
         image_labels[idx] = label
     h = int(np.sqrt(test.shape[0]))
@@ -91,11 +94,12 @@ def predict(class_means, test):
 
 
 def equal_random_selector(real_labels):
-    print("Equal Random Selection Started")
+    # print("Equal Random Selection Started")
     selected_idx = []
     counter_dict = dict.fromkeys(REVERSED_LABELS, 0)
     maxx = 200
-    print(f"Length of real labels {len(real_labels)}")
+
+    # print(f"Length of real labels {len(real_labels)}")
     while len(selected_idx) < len(real_labels)//10:
         rs = np.random.randint(low=0, high=len(real_labels))
         random_selection = real_labels[rs]
