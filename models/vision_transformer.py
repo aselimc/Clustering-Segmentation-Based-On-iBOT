@@ -74,6 +74,7 @@ class Attention(nn.Module):
     def forward(self, x):
         B, N, C = x.shape
         qkv = self.qkv(x).reshape(B, N, 3, self.num_heads, C // self.num_heads).permute(2, 0, 3, 1, 4)
+        # (bs x num_heads x num_patches x (embed_dim / num_heads))
         q, k, v = qkv[0], qkv[1], qkv[2]
 
         attn = (q @ k.transpose(-2, -1)) * self.scale
@@ -83,7 +84,16 @@ class Attention(nn.Module):
         x = (attn @ v).transpose(1, 2).reshape(B, N, C)
         x = self.proj(x)
         x = self.proj_drop(x)
-        return x, attn
+
+        outputs = {
+            'encoding'  : x,
+            'attention' : attn,
+            'query'     : q.transpose(1, 2).reshape(B, N, C),
+            'key'       : k.transpose(1, 2).reshape(B, N, C),
+            'value'     : v.transpose(1, 2).reshape(B, N, C),
+        }
+
+        return outputs
 
 class Block(nn.Module):
     def __init__(self, dim, num_heads, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop=0., 
@@ -103,16 +113,23 @@ class Block(nn.Module):
         else:
             self.gamma_1, self.gamma_2 = None, None
 
-    def forward(self, x, return_attention=False):
-        y, attn = self.attn(self.norm1(x))
+    def forward(self, x, return_attention=False, return_qkv=False):
+        outputs = self.attn(self.norm1(x))
+
         if return_attention:
-            return attn
+            return outputs['attention']
         if self.gamma_1 is None:
-            x = x + self.drop_path(y)
+            x = x + self.drop_path(outputs['encoding'])
             x = x + self.drop_path(self.mlp(self.norm2(x)))
         else:
-            x = x + self.drop_path(self.gamma_1 * y)
-            x = x + self.drop_path(self.gamma_2 * self.mlp(self.norm2(x)))
+            x = x + self.drop_path(self.gamma_1 * outputs['encoding'])
+            x = x + self.drop_path(self.gamma_2 * self.mlp(self.norm2(x))) 
+        
+        if return_qkv:
+            del outputs['attention']
+            del outputs['encoding']
+            return x, outputs
+
         return x
 
 class PatchEmbed(nn.Module):
@@ -260,7 +277,18 @@ class VisionTransformer(nn.Module):
             if len(self.blocks) - i <= n:
                 output.append(self.norm(x))
         return output
-        
+
+    def get_qkv(self, x, n=1, out='query'):
+        x = self.prepare_tokens(x)
+        output = []
+        for i, blk in enumerate(self.blocks):
+            if len(self.blocks) - i <= n:
+                x, qkv = blk(x, return_qkv=True)
+                output.append(self.norm(qkv[out]))
+            else:
+                x = blk(x)
+        return output
+
     def get_num_layers(self):
         return len(self.blocks)
 
