@@ -32,7 +32,8 @@ def main(args):
                                      num_classes=2 if args.segmentation == 'binary' else 21,
                                      feature=args.feature,
                                      n_blocks=args.n_blocks,
-                                     temperature=args.temperature)
+                                     temperature=args.temperature,
+                                     use_cuda=True)
 
     ## TRAINING DATASET ##
     transform = _transforms.Compose([

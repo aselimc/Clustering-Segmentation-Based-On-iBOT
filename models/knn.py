@@ -42,6 +42,9 @@ class KNNSegmentator(nn.Module):
         self.use_cuda = use_cuda
         if use_cuda:
             self.backbone.cuda()
+            self.device = torch.device('cuda')
+        else:
+            self.device = torch.device('cpu')
 
     def forward(self, image):
         bs = image.size(0)
@@ -86,8 +89,7 @@ class KNNSegmentator(nn.Module):
 
         progress_bar = tqdm(total=len(loader))
         for image, target in loader:
-            if self.use_cuda:
-                image = image.cuda()
+            image = image.to(device=self.device)
             feat = self.extract_feature(image)
             feat = feat.permute(2, 0, 1).flatten(start_dim=1)
             feat = feat.cpu()
@@ -112,17 +114,14 @@ class KNNSegmentator(nn.Module):
 
     @torch.no_grad()
     def score(self, loader):
-        if self.use_cuda:
-            self.train_features = self.train_features.cuda()
-            self.train_labels = self.train_labels.cuda()
-
+        self.train_features = self.train_features.to(device=self.device)
+        self.train_labels = self.train_labels.to(device=self.device)
         top1 = []
 
         progress_bar = tqdm(total=len(loader))
         for idx, (image, target) in enumerate(loader):
-            if self.use_cuda:
-                image = image.cuda()
-                target = target.cuda()
+            image = image.to(device=self.device)
+            target = target.to(device=self.device)
 
             pred = self.forward(image)
             top1.append(IoU(pred, target))
