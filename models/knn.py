@@ -117,7 +117,6 @@ class KNNSegmentator(nn.Module):
         self.train_features = self.train_features.to(device=self.device)
         self.train_labels = self.train_labels.to(device=self.device)
         top1 = []
-        top1_1 = []
 
         progress_bar = tqdm(total=len(loader))
         for idx, (image, target) in enumerate(loader):
