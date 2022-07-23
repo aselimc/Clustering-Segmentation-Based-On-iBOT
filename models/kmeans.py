@@ -4,132 +4,30 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision.utils import make_grid
+from torchpq.clustering import KMeans
 from tqdm import tqdm
 
 from utils import IoU
 
 
-def l2_distance(input, centroids, dim=1):
-    return torch.pow(centroids - input, 2).sum(dim=dim)
+class KMeansSegmentator(nn.Module):
 
-
-class KMeans(nn.Module):
-
-    def __init__(self,
+    def __init__(self, backbone, logger,
                  k=20,
-                 embed_dim=1024,
-                 max_iter=300,
-                 tol=1e-4,
-                 n_init=10,
-                 centroid_init='random',
-                 use_cuda=True):
-        super(KMeans, self).__init__()
-
-        self.k = k
-        self.max_iter = max_iter
-        self.tol = tol
-        self.n_init = n_init
+                 num_classes=21,
+                 feature='intermediate',
+                 patch_labeling='coarse',
+                 n_blocks=1,
+                 use_cuda=True,
+                 distance='euclidean',
+                 **kwargs):
+        super(KMeansSegmentator, self).__init__()
 
         self.use_cuda = use_cuda
         if use_cuda:
             self.device = torch.device('cuda')
         else:
             self.device = torch.device('cpu')
-        
-        self.centroid_init = centroid_init
-        self.embed_dim = embed_dim
-        self.centroids = torch.zeros(embed_dim, k).to(self.device)
-
-    @torch.no_grad()
-    def predict(self, test_features):
-        test_features = test_features.to(device=self.centroids.device)
-        num_samples = test_features.size(0)
-
-        centroids = self.centroids.unsqueeze(0).expand(num_samples, self.embed_dim, -1)
-        l2_dists = l2_distance(test_features.unsqueeze(2), centroids)
-        assignment = torch.argmin(l2_dists, dim=1)
-
-        return assignment
-
-    @torch.no_grad()
-    def fit(self, train_features):
-        train_features = train_features.to(device=self.device)
-        
-        if self.centroid_init == 'kmeans++':
-            self._kmeans_plusplus(train_features)
-        else:
-            num_samples = train_features.size(0)
-            centroid_idx = np.random.choice(num_samples, size=self.k, replace=False)
-            self.centroids = train_features[centroid_idx].transpose(0, 1)
-
-        print("\nFit clusters...")
-        progress_bar = tqdm(total=self.max_iter)
-        for it in range(self.max_iter):
-            new_centroids = self._step(train_features)
-
-            centroid_similarity = (self.centroids * new_centroids).sum(dim=0)
-            centroid_change = torch.abs(centroid_similarity).sum()
-            if centroid_change < self.tol:
-                progress_bar.update(self.max_iter - it)
-                break
-
-            self.centroids = new_centroids
-
-            progress_bar.update()
-
-    def _step(self, train_features):
-        new_centroids = torch.zeros_like(self.centroids).to(device=self.device)
-        num_samples = train_features.size(0)
-        centroids = self.centroids.unsqueeze(0).expand(num_samples, self.embed_dim, self.k)
-
-        # (bs x num_patches x embed_dim) * (embed_dim x k)
-        l2_dists = l2_distance(train_features.unsqueeze(2), centroids)
-        assignment = torch.argmin(l2_dists, dim=1)
-
-        for idx in range(self.k):
-            new_centroids[:, idx] += train_features[assignment == idx].mean(dim=0)
-
-        return new_centroids
-
-    def _kmeans_plusplus(self, train_features):
-        train_features = train_features
-        num_samples = train_features.size(0)
-
-        first_centroid_idx = np.random.choice(num_samples)
-        img_idx = first_centroid_idx // self.num_patches
-        patch_idx = first_centroid_idx % self.num_patches
-        first_centroid = train_features[img_idx, patch_idx]
-        self.centroids[:, 0] = first_centroid
-
-        for i in range(1, self.k):
-            sampled_centroids = self.centroids[:, :i]
-            sampled_centroids = sampled_centroids.unsqueeze(0).expand(num_samples, self.embed_dim, -1)
-            l2_dists = l2_distance(train_features.unsqueeze(2), sampled_centroids)
-            l2_dists, _ = torch.max(l2_dists, dim=1)
-
-            # random sampling of 2 + log(k) many centroid candidates
-            # lower similarity -> higher probability  
-            rand_vals = torch.rand(size=(2+int(np.log(self.k)),), device=l2_dists.device)
-            rand_vals *= l2_dists.sum()
-            cdf = l2_dists.cumsum(dim=0)
-            candidate_idx = torch.searchsorted(cdf, rand_vals)
-
-            candidate_centroids = train_features[candidate_idx]
-            candidate_l2_dists = l2_dists[candidate_idx]
-            idx = torch.argmax(candidate_l2_dists, dim=0)
-            centroid = candidate_centroids[idx]
-            self.centroids[:, i] = centroid
-
-
-class KMeansSegmentator(KMeans):
-
-    def __init__(self, backbone, logger,
-                 num_classes=21,
-                 feature='intermediate',
-                 patch_labeling='coarse',
-                 n_blocks=1,
-                 **kwargs):
-        super(KMeansSegmentator, self).__init__(embed_dim=backbone.embed_dim, **kwargs)
 
         self.backbone = backbone.to(device=self.device)
         self.feature = feature
@@ -139,20 +37,22 @@ class KMeansSegmentator(KMeans):
         self.num_classes = num_classes
         self.patch_labeling = patch_labeling
 
+        self.kmeans = KMeans(n_clusters=k, distance=distance, **kwargs)
+
         self.logger = logger
 
     def forward(self, image):
         bs = image.size(0)
-        feat = self._extract_feature(image).unsqueeze(3)
+        feat = self._extract_feature(image)
+        feat = feat.flatten(start_dim=0, end_dim=1).permute(1, 0).contiguous()
+        feat = feat.cpu()
 
-        centroids = self.centroids.unsqueeze(0).unsqueeze(0)
-        centroids = centroids.expand(bs, self.num_patches, self.embed_dim, self.k)
-
-        l2_dists = l2_distance(feat, centroids, dim=2)
-        assignment = torch.argmax(l2_dists, dim=2)
-        assignment = assignment.unsqueeze(2).expand(bs, self.num_patches, self.patch_size**2).unsqueeze(3)
+        cluster_assignment = self.kmeans.predict(feat)
+        cluster_assignment = cluster_assignment.to(device=self.device)
+        cluster_assignment = cluster_assignment.view(bs, self.num_patches).unsqueeze(2)
+        cluster_assignment = cluster_assignment.expand(bs, self.num_patches, self.patch_size**2).unsqueeze(3)
         cluster_labels = self.cluster_labels.expand(bs, self.num_patches, self.patch_size**2, self.k)
-        patch_preds = torch.gather(cluster_labels, dim=3, index=assignment)
+        patch_preds = torch.gather(cluster_labels, dim=3, index=cluster_assignment)
         patch_preds = patch_preds.view(bs, self.num_patches, 1, self.patch_size, self.patch_size)
 
         # tile label patches together -> (bs, k, 224, 224)
@@ -190,27 +90,27 @@ class KMeansSegmentator(KMeans):
             train_labels.append(target)
             progress_bar.update()
         
-        train_features = torch.cat(train_features, dim=0)
+        train_features = torch.cat(train_features, dim=0).permute(1, 0).contiguous()
         train_labels = torch.cat(train_labels, dim=0).long()
         train_labels = F.one_hot(train_labels, self.num_classes)
 
         # fit clusters, i.e. get centroids (embed_dim, k)
-        super(KMeansSegmentator, self).fit(train_features)
+        print("\nFitting clusters...")
+        self.kmeans.fit(train_features)
 
         # label clusters
-        # weighted majority vote accross patches, higher distance -> lower weight
-        cluster_assignment = super(KMeansSegmentator, self).predict(train_features)
+        print("Assigning cluster labels...")
+        cluster_assignment = self.kmeans.predict(train_features)
         train_features = train_features.to(device=self.device)
         train_labels = train_labels.to(device=self.device)
+
+        similarities = self._similarity(train_features, self.centroids.to(device=self.device))
         for idx in range(self.k):
-            num_assignments = (cluster_assignment == idx).sum()
-            centroid = self.centroids[:, idx]
-            centroid = centroid.unsqueeze(0).expand(num_assignments, self.embed_dim)
-            assigned_train_features = train_features[cluster_assignment == idx]
+            # weighted majority vote accross patches, higher similarity -> higher weight
+            assigned_similarities = similarities[cluster_assignment == idx, idx]
+            weights = torch.softmax(assigned_similarities, dim=0)
+
             assigned_train_labels = train_labels[cluster_assignment == idx]
-            
-            l2_dists = l2_distance(assigned_train_features, centroid)
-            weights = torch.softmax(l2_dists, dim=0)
             vote = torch.sum(weights[:, None, None] * assigned_train_labels, dim=0)
             label = torch.argmax(vote, dim=1)
             self.cluster_labels.append(label)
@@ -230,8 +130,6 @@ class KMeansSegmentator(KMeans):
             pred = self.forward(image)
             top1.append(IoU(pred, target))
 
-            progress_bar.update()
-
             if idx % self.logger.config['eval_freq'] == 0 or idx == len(loader):
                 self.logger.log_segmentation(image[0], pred[0], target[0], step=idx, logit=False)
             progress_bar.update()
@@ -247,6 +145,9 @@ class KMeansSegmentator(KMeans):
 
         return miou, iou_std
 
+    def _similarity(self, x, y, inplace=False, normalize=True):
+        return self.kmeans.sim(x, y, inplace, normalize)
+
     def _extract_feature(self, images):
         if self.feature == 'intermediate':
             intermediate_output = self.backbone.get_intermediate_layers(images, self.n_blocks)
@@ -257,6 +158,22 @@ class KMeansSegmentator(KMeans):
         feat = feat[:, 1:]
 
         return feat
+
+    @property
+    def centroids(self):
+        return self.kmeans.centroids
+    
+    @property
+    def k(self):
+        return self.kmeans.n_clusters
+
+    @property
+    def distance(self):
+        return self.kmeans.distance
+
+    @property
+    def embed_dim(self):
+        return self.backbone.embed_dim
 
     @property
     def patch_size(self):

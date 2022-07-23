@@ -31,7 +31,12 @@ def main(args):
                     k=args.n_neighbors,
                     feature=args.feature,
                     n_blocks=args.n_blocks,
-                    use_cuda=True)
+                    use_cuda=True,
+                    distance=args.distance,
+                    init_mode=args.init,
+                    n_redo=args.n_init,
+                    max_iter=args.max_iter,
+                    tol=args.tol)
 
     ## TRAINING DATASET ##
     transform = _transforms.Compose([
@@ -60,10 +65,15 @@ def parser_args():
     parser.add_argument('--arch', type=str, default="vit_base")
     parser.add_argument('--feature', type=str, choices=['intermediate', 'query', 'key', 'value'],
                         default='intermediate')
-    parser.add_argument('--patch_labeling', type=str, choices=['coarse', 'fine'], default='fine')
-    parser.add_argument('--n_neighbors', type=int, default=20)
     parser.add_argument('--patch_size', type=int, default=16)
     parser.add_argument('--n_blocks', type=int, default=1)
+    parser.add_argument('--patch_labeling', type=str, choices=['coarse', 'fine'], default='fine')
+    parser.add_argument('--n_neighbors', type=int, default=20)
+    parser.add_argument('--max_iter', type=int, default=300)
+    parser.add_argument('--tol', type=float, default=1e-4),
+    parser.add_argument('--init', type=str, choices=['kmeans++', 'random'], default='kmeans++')
+    parser.add_argument('--n_init', type=int, default=10)
+    parser.add_argument('--distance', type=str, choices=['euclidean', 'cosine'], default='euclidean')
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument("--percentage", type=float, default=0.1)
     parser.add_argument("--segmentation", type=str, choices=['binary', 'multi'], default='multi')
