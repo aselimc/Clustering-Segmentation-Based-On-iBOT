@@ -6,7 +6,7 @@ from torchvision.utils import make_grid
 from torchpq.clustering import KMeans
 from tqdm import tqdm
 
-from utils import IoU
+from utils import mIoU
 
 
 class KMeansSegmentator(nn.Module):
@@ -108,6 +108,7 @@ class KMeansSegmentator(nn.Module):
             # weighted majority vote accross patches, higher similarity -> higher weight
             assigned_similarities = similarities[cluster_assignment == idx, idx]
             weights = torch.softmax(assigned_similarities, dim=0)
+            weights = weights * 0.0 + 1.0
 
             assigned_train_labels = train_labels[cluster_assignment == idx]
             vote = torch.sum(weights[:, None, None] * assigned_train_labels, dim=0)
@@ -127,13 +128,13 @@ class KMeansSegmentator(nn.Module):
             target = target.to(device=self.device)
 
             pred = self.forward(image)
-            top1.append(IoU(pred, target))
+            top1.append(mIoU(pred, target))
 
             if idx % self.logger.config['eval_freq'] == 0 or idx == len(loader):
                 self.logger.log_segmentation(image[0], pred[0], target[0], step=idx, logit=False)
             progress_bar.update()
 
-        top1 = torch.cat(top1, dim=0)
+        top1 = torch.stack(top1)
         miou = torch.mean(top1).item()
         iou_std = torch.std(top1).item()
 

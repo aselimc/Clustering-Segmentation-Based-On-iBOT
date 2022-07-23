@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torchvision.utils import make_grid
 from tqdm import tqdm
 
-from utils import IoU
+from utils import mIoU
 
 
 class KNNSegmentator(nn.Module):
@@ -117,6 +117,7 @@ class KNNSegmentator(nn.Module):
         self.train_features = self.train_features.to(device=self.device)
         self.train_labels = self.train_labels.to(device=self.device)
         top1 = []
+        top1_1 = []
 
         progress_bar = tqdm(total=len(loader))
         for idx, (image, target) in enumerate(loader):
@@ -124,13 +125,13 @@ class KNNSegmentator(nn.Module):
             target = target.to(device=self.device)
 
             pred = self.forward(image)
-            top1.append(IoU(pred, target))
+            top1.append(mIoU(pred, target))
 
             if idx % self.logger.config['eval_freq'] == 0 or idx == len(loader):
                 self.logger.log_segmentation(image[0], pred[0], target[0], step=idx, logit=False)
             progress_bar.update()
 
-        top1 = torch.cat(top1, dim=0)
+        top1 = torch.stack(top1)
         miou = torch.mean(top1).item()
         iou_std = torch.std(top1).item()
 

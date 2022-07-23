@@ -3,17 +3,20 @@ import torch
 import torch.nn.functional as F
 
 
-def IoU(pred, label, num_classes=21):
-    pred = torch.flatten(pred, start_dim=1).long()
-    pred = F.one_hot(pred, num_classes)
+def mIoU(pred, gt, num_classes=21):
+    ins_iou = []
+    for instance in range(num_classes):
+        if instance==0:
+            continue #do not consider background
+        intersection = ((pred == instance) & (gt == instance)).sum().float()
+        union = ((pred == instance) | (gt == instance)).sum().float()
+        if union==0:
+            continue
+        iou_val = intersection/(union+1.)
+        ins_iou.append(iou_val)
 
-    label = torch.flatten(label, start_dim=1).long()
-    label = F.one_hot(label, num_classes)
-
-    intersection = torch.logical_and(pred, label)
-    union = torch.logical_or(pred, label)
-
-    return intersection.sum(dim=[1, 2]) / union.sum(dim=[1, 2])
+    mean_iou = torch.mean(torch.stack(ins_iou))
+    return mean_iou
 
 
 def mIoUWithLogits(pred, label, num_classes=21):
