@@ -46,31 +46,33 @@ def plot_dendrogram(model, **kwargs):
     dendrogram(linkage_matrix, **kwargs)
 
 # We fit data, we fit labeled data, and we label clusters
-def Clustering( vit_output: torch.Tensor, real_labels: List, start, stop, step, logger):
+def Clustering( vit_output: torch.Tensor, real_labels: List, start, stop, step, logger, args):
     # Creating clustering tree
-
     vit_output = vit_output[:, 1:, :]
     vit_output = vit_output.reshape( -1, vit_output.shape[2]).contiguous().detach().cpu()
     real_labels = real_labels.reshape( -1)
-    # s_label_idx = equal_random_selector(real_labels)
-    s_label_idx = np.arange(len(real_labels))
+    if args.labelling == "all": 
+        s_label_idx = np.arange(len(real_labels))
+    else :
+        s_label_idx = equal_random_selector(real_labels)  
     s_label = real_labels[s_label_idx]
     labels = np.empty(shape=vit_output.shape[0], dtype="U100")
     labels[s_label_idx] = s_label
-    # print("Trying different number of clusters to find optimal one")
-    #purities = iteration_over_clusters(vit_output, labels, s_label_idx, start, stop, step, logger)
-    
-    # best_cluster = best_cluster_count(purities, start, step)
+    if args.calculate_purity == True:
+        print("Trying different number of clusters to find optimal one")
+        purities = iteration_over_clusters(vit_output, labels, s_label_idx, start, stop, step, logger)
+        best_cluster = best_cluster_count(purities, start, step)
     # print(f"Best number of cluster that has been found is {best_cluster}")
-    best_cluster = 80
-    cluster = AgglomerativeClustering(n_clusters=best_cluster, affinity="euclidean",
-                                      compute_full_tree=False, linkage="ward", compute_distances=True)
+    else:
+        best_cluster = args.n_cluster
+    cluster = AgglomerativeClustering(n_clusters=best_cluster, affinity=args.affinity,
+                                      compute_full_tree=False, linkage=args.linkage, compute_distances=True)
     cluster = cluster.fit(vit_output)
     labels_entire_trainset = majority_labeller(cluster, best_cluster, s_label_idx, labels)
     class_means = get_class_means(vit_output, labels_entire_trainset)
     return class_means
 
-def validate(loader, class_means, backbone, logger):
+def validate(loader, class_means, backbone, logger, args):
     global global_step
     backbone.eval()
     miou_arr = []
@@ -80,7 +82,10 @@ def validate(loader, class_means, backbone, logger):
         global_step += 1
         img = img.cuda()
         with torch.no_grad():
-            vit_output = backbone.get_intermediate_layers(img.cuda(), n=1)[0]
+            if args.feature == 'intermediate':
+                vit_output = backbone.get_intermediate_layers(img.cuda(), n=1)[0]
+            else:
+                vit_output = backbone.get_qkv(img.cuda(), n=1, out=args.feature)[0]
             vit_output = vit_output[:, 1:, :]
             vit_output = vit_output.reshape( -1, vit_output.shape[2]).contiguous().detach().cpu()
             image_labels = predict(class_means, vit_output)
@@ -144,7 +149,10 @@ def main(args):
     vit_output_list = []
     label_list = []
     for img, label in train_loader:
-        vit_output = backbone.get_intermediate_layers(img.cuda(), n=1)[0]
+        if args.feature == 'intermediate':
+            vit_output = backbone.get_intermediate_layers(img.cuda(), n=1)[0]
+        else:
+            vit_output = backbone.get_qkv(img.cuda(), n=1, out=args.feature)[0]
         vit_output_list.append(vit_output.to("cpu"))
         label_list.append(label.to("cpu"))
     vit_output = torch.cat(vit_output_list, dim=0)
@@ -164,8 +172,9 @@ def main(args):
                             start = args.n_cluster_start, 
                             stop = args.n_cluster_stop, 
                             step = args.n_cluster_step,
-                            logger= logger)
-        miou = validate(val_loader, class_means, backbone, logger)
+                            logger= logger,
+                            args= args)
+        miou = validate(val_loader, class_means, backbone, logger, args)
         logger.log_scalar({"val_miou": miou,
             }, step=global_step)
         c_means.append(class_means)
@@ -188,12 +197,20 @@ def parser_args():
     parser.add_argument('--segmentation', type=str, choices=['binary', 'multi'], default='multi')
     parser.add_argument('--percentage', type=float, default=1)
     parser.add_argument('--download_data', type=bool, default=False)
-    parser.add_argument('--n_chunks', type=int, default=10)
+    parser.add_argument('--n_chunks', type=int, default=13)
     parser.add_argument('--batch_size', type=int, default=64)
     parser.add_argument('--n_workers', type=int, default=4)
     parser.add_argument('--n_cluster_start', type=int, default=96)
     parser.add_argument('--n_cluster_stop', type=int, default=100)
     parser.add_argument('--n_cluster_step', type=int, default=4)
+    parser.add_argument('--n_cluster', type=int, default= 100)
+    parser.add_argument('--feature', type=str, default='query')
+    parser.add_argument('--affinity', type=str, default='euclidean')
+    parser.add_argument('--linkage', type=str, default='ward')
+    parser.add_argument('--labelling', type=str, default='all')
+    parser.add_argument('--calculate_purity', type=bool, default=False)
+
+ 
     return parser.parse_args()
 
 
