@@ -1,0 +1,110 @@
+2022-07-25 01:23:13 INFO open for scan: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220724_233431-3lus00a5/run-3lus00a5.wandb
+2022-07-25 01:23:13 INFO watching files in: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220724_233431-3lus00a5/files
+2022-07-25 01:23:13 INFO run started: 3lus00a5 with start time 1658698471
+2022-07-25 01:23:13 INFO saving file wandb-metadata.json with policy now
+2022-07-25 01:23:13 INFO saving file wandb-summary.json with policy end
+2022-07-25 01:23:13 INFO handling exit code: 1
+2022-07-25 01:23:13 INFO handling runtime: 1533
+2022-07-25 01:23:13 INFO saving file wandb-summary.json with policy end
+2022-07-25 01:23:13 INFO send defer
+2022-07-25 01:23:13 INFO handle sender defer: 0
+2022-07-25 01:23:13 INFO send defer: 1
+2022-07-25 01:23:13 INFO handle sender defer: 1
+2022-07-25 01:23:13 INFO send defer: 2
+2022-07-25 01:23:13 INFO handle sender defer: 2
+2022-07-25 01:23:13 INFO send defer: 3
+2022-07-25 01:23:13 INFO handle sender defer: 3
+2022-07-25 01:23:13 INFO send defer: 4
+2022-07-25 01:23:13 INFO handle sender defer: 4
+2022-07-25 01:23:13 INFO send defer: 5
+2022-07-25 01:23:13 INFO handle sender defer: 5
+2022-07-25 01:23:14 INFO send defer: 6
+2022-07-25 01:23:14 INFO handle sender defer: 6
+2022-07-25 01:23:14 INFO shutting down directory watcher
+2022-07-25 01:23:14 INFO Uploaded file /tmp/tmpdkd6uakiwandb/246o6dxf-wandb-metadata.json
+2022-07-25 01:23:14 INFO file/dir modified: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220724_233431-3lus00a5/files/config.yaml
+2022-07-25 01:23:14 INFO file/dir modified: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220724_233431-3lus00a5/files/wandb-summary.json
+2022-07-25 01:23:14 INFO scan: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220724_233431-3lus00a5/files
+2022-07-25 01:23:14 INFO scan save: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220724_233431-3lus00a5/files/requirements.txt requirements.txt
+2022-07-25 01:23:14 INFO scan save: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220724_233431-3lus00a5/files/wandb-metadata.json wandb-metadata.json
+2022-07-25 01:23:14 INFO scan save: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220724_233431-3lus00a5/files/output.log output.log
+2022-07-25 01:23:14 INFO scan save: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220724_233431-3lus00a5/files/wandb-summary.json wandb-summary.json
+2022-07-25 01:23:14 INFO scan save: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220724_233431-3lus00a5/files/config.yaml config.yaml
+2022-07-25 01:23:14 INFO send defer: 7
+2022-07-25 01:23:14 INFO handle sender defer: 7
+2022-07-25 01:23:14 INFO shutting down file pusher
+2022-07-25 01:23:14 INFO shutting down sender
+2022-07-25 01:23:14 INFO shutting down file pusher
+2022-07-25 01:23:14 INFO waiting for file pusher
+2022-07-25 01:23:15 INFO Uploaded file /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220724_233431-3lus00a5/files/output.log
+2022-07-25 01:23:15 INFO Uploaded file /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220724_233431-3lus00a5/files/wandb-summary.json
+2022-07-25 01:23:15 INFO Uploaded file /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220724_233431-3lus00a5/files/config.yaml
+2022-07-25 01:23:15 INFO Uploaded file /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220724_233431-3lus00a5/files/requirements.txt
+2022-07-25 01:23:15 INFO send defer: 8
+2022-07-25 01:23:16 INFO open for scan: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_000924-3e0f8pzt/run-3e0f8pzt.wandb
+2022-07-25 01:23:16 INFO open for scan: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_002701-1fybvtl2/run-1fybvtl2.wandb
+2022-07-25 01:23:16 INFO open for scan: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_002930-1evcld4u/run-1evcld4u.wandb
+2022-07-25 01:23:16 INFO open for scan: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_003944-2266efha/run-2266efha.wandb
+2022-07-25 01:23:16 INFO open for scan: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/run-20v5x2u5.wandb
+2022-07-25 01:23:16 INFO watching files in: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files
+2022-07-25 01:23:16 INFO run started: 20v5x2u5 with start time 1658702668
+2022-07-25 01:23:16 INFO saving file wandb-metadata.json with policy now
+2022-07-25 01:23:16 INFO shutting down sender
+2022-07-25 01:23:16 INFO shutting down directory watcher
+2022-07-25 01:23:17 INFO Uploaded file /tmp/tmp2x1kd307wandb/3kc35w3m-wandb-metadata.json
+2022-07-25 01:23:17 INFO scan: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files
+2022-07-25 01:23:17 INFO scan save: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files/requirements.txt requirements.txt
+2022-07-25 01:23:17 INFO scan save: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files/wandb-metadata.json wandb-metadata.json
+2022-07-25 01:23:17 INFO scan save: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files/output.log output.log
+2022-07-25 01:23:17 INFO scan save: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files/config.yaml config.yaml
+2022-07-25 01:23:17 INFO shutting down file pusher
+2022-07-25 01:23:17 INFO waiting for file pusher
+2022-07-25 01:23:18 INFO Uploaded file /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files/requirements.txt
+2022-07-25 01:23:18 INFO Uploaded file /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files/config.yaml
+2022-07-25 08:25:08 INFO open for scan: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_000924-3e0f8pzt/run-3e0f8pzt.wandb
+2022-07-25 08:25:08 INFO open for scan: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_002701-1fybvtl2/run-1fybvtl2.wandb
+2022-07-25 08:25:08 INFO open for scan: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_002930-1evcld4u/run-1evcld4u.wandb
+2022-07-25 08:25:08 INFO open for scan: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_003944-2266efha/run-2266efha.wandb
+2022-07-25 08:25:08 INFO open for scan: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/run-20v5x2u5.wandb
+2022-07-25 08:25:08 INFO watching files in: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files
+2022-07-25 08:25:08 INFO run started: 20v5x2u5 with start time 1658702668
+2022-07-25 08:25:08 INFO saving file wandb-metadata.json with policy now
+2022-07-25 08:25:08 INFO saving file wandb-summary.json with policy end
+2022-07-25 08:25:08 INFO handling exit code: 0
+2022-07-25 08:25:08 INFO handling runtime: 6634
+2022-07-25 08:25:08 INFO saving file wandb-summary.json with policy end
+2022-07-25 08:25:08 INFO send defer
+2022-07-25 08:25:08 INFO handle sender defer: 0
+2022-07-25 08:25:08 INFO send defer: 1
+2022-07-25 08:25:08 INFO handle sender defer: 1
+2022-07-25 08:25:08 INFO send defer: 2
+2022-07-25 08:25:08 INFO handle sender defer: 2
+2022-07-25 08:25:08 INFO send defer: 3
+2022-07-25 08:25:08 INFO handle sender defer: 3
+2022-07-25 08:25:08 INFO send defer: 4
+2022-07-25 08:25:08 INFO handle sender defer: 4
+2022-07-25 08:25:08 INFO send defer: 5
+2022-07-25 08:25:08 INFO handle sender defer: 5
+2022-07-25 08:25:09 INFO send defer: 6
+2022-07-25 08:25:09 INFO handle sender defer: 6
+2022-07-25 08:25:09 INFO shutting down directory watcher
+2022-07-25 08:25:09 INFO Uploaded file /tmp/tmpjarb325lwandb/1obbx7b3-wandb-metadata.json
+2022-07-25 08:25:09 INFO file/dir modified: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files/wandb-summary.json
+2022-07-25 08:25:09 INFO file/dir modified: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files/config.yaml
+2022-07-25 08:25:09 INFO scan: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files
+2022-07-25 08:25:09 INFO scan save: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files/requirements.txt requirements.txt
+2022-07-25 08:25:09 INFO scan save: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files/wandb-metadata.json wandb-metadata.json
+2022-07-25 08:25:09 INFO scan save: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files/output.log output.log
+2022-07-25 08:25:09 INFO scan save: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files/config.yaml config.yaml
+2022-07-25 08:25:09 INFO scan save: /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files/wandb-summary.json wandb-summary.json
+2022-07-25 08:25:09 INFO send defer: 7
+2022-07-25 08:25:09 INFO handle sender defer: 7
+2022-07-25 08:25:09 INFO shutting down file pusher
+2022-07-25 08:25:09 INFO shutting down sender
+2022-07-25 08:25:09 INFO shutting down file pusher
+2022-07-25 08:25:09 INFO waiting for file pusher
+2022-07-25 08:25:10 INFO Uploaded file /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files/wandb-summary.json
+2022-07-25 08:25:10 INFO Uploaded file /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files/requirements.txt
+2022-07-25 08:25:10 INFO Uploaded file /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files/output.log
+2022-07-25 08:25:10 INFO Uploaded file /project/dl2022s/canakcia/iBot-cv/iBot-cv/wandb/offline-run-20220725_004428-20v5x2u5/files/config.yaml
+2022-07-25 08:25:10 INFO send defer: 8

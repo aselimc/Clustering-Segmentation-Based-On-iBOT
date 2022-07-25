@@ -1,5 +1,4 @@
 from datetime import datetime
-from this import d
 
 import torch
 import wandb

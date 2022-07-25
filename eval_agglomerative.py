@@ -37,7 +37,9 @@ def main(args):
                     distance=args.distance,
                     calculate_purity=args.purity,
                     patch_labeling=args.patch_labeling,
-                    percentage=args.label_percentage)
+                    percentage=args.label_percentage,
+                    affinity=args.distance,
+                    linkage=args.linkage)
 
     ## TRAINING DATASET ##
     transform = _transforms.Compose([
@@ -54,11 +56,12 @@ def main(args):
     val_dataset = datasets.VOCSegmentation(root=args.root, image_set='val', download=False, transforms=transform)
     val_loader = DataLoader(val_dataset, batch_size=1)
 
-    # agglomerative.fit(train_loader)
-    agglomerative.load_cluster_centroids()
-    agglomerative.forward(val_loader)
-    # miou, iou_std = kmeans.score(val_loader)
-    # print(f'mean intersecion over union: {miou} (±{iou_std}) ')
+    if args.fit_clusters:
+        agglomerative.fit(train_loader)
+    else:
+        agglomerative.load_cluster_centroids()
+    miou, std_miou = agglomerative.forward(val_loader)
+    print(f'mean intersecion over union: {miou} (±{std_miou}) ')
 
 
 def parser_args():
@@ -84,6 +87,8 @@ def parser_args():
     parser.add_argument('--n_chunks', type=int, default=20)
     parser.add_argument('--purity', type=bool, default=False)
     parser.add_argument('--n_clusters', type=int, default=80)
+    parser.add_argument('--fit_clusters', type=bool, default=False)
+    parser.add_argument('--linkage', type=str, choices=['ward', 'average', 'single', 'maximum'], default='ward')
 
 
     return parser.parse_args()

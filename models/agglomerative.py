@@ -11,6 +11,7 @@ from utils.metrics import mIoU
 
 class AgglomerativeClustering(nn.Module):
     
+    @torch.no_grad()
     def __init__(self,
                 backbone,
                 logger,
@@ -24,8 +25,8 @@ class AgglomerativeClustering(nn.Module):
                 temperature=1.0,
                 patch_labeling='coarse',
                 n_classes=21,
-                affinity='cosine',
-                linkage='average',
+                affinity='euclidean',
+                linkage='ward',
                 percentage=1.0    
         ):
         super(AgglomerativeClustering, self).__init__()
@@ -57,8 +58,8 @@ class AgglomerativeClustering(nn.Module):
         image_miou = []
         for idx, (image, seg) in enumerate(loader):
             image = image.cuda()
-            predictions = np.stack(self.predict(image), axis=0).squeeze(1).astype('int64')
-            pred = mode(predictions, axis=0)[0].astype('int64')
+            predictions = np.stack(self.predict(image), axis=0).squeeze(1)
+            pred = mode(predictions, axis=0)[0]
             pred = torch.Tensor(pred)
             chunk_miou = mIoU(pred, seg, no_softmax=False)
             self.logger.log_scalar({'chunk_miou':chunk_miou}, self.global_step)
@@ -68,6 +69,10 @@ class AgglomerativeClustering(nn.Module):
             progress_bar.update()
             image_miou.append(chunk_miou)
         image_miou = np.array(image_miou)
+        average_miou = np.mean(image_miou)
+        std_miou = np.std(image_miou)
+        self.logger.log_scalar_summary({'average_miou':average_miou, 'std_miou': std_miou})
+        return average_miou, std_miou
 
 
     @torch.no_grad()
@@ -208,12 +213,12 @@ class AgglomerativeClustering(nn.Module):
         return feat
 
     def save_cluster_centroids(self):
-        np.save('c_centroid_cosine.npy', np.array(self.chunked_c_centroids))
-        np.save('c_label_cosine.npy', np.array(self.chunked_c_labels))
+        np.save(f'c_centroid_{self.feature}_{self.affinity}_{self.n_chunks}.npy', np.array(self.chunked_c_centroids))
+        np.save(f'c_label_{self.feature}_{self.affinity}_{self.n_chunks}.npy', np.array(self.chunked_c_labels))
 
     def load_cluster_centroids(self):
-        self.chunked_c_centroids = list(np.load('c_centroid_cosine.npy'))
-        self.chunked_c_labels = list(np.load('c_label_cosine.npy'))
+        self.chunked_c_centroids = list(np.load(f'c_centroid_{self.feature}_{self.affinity}_{self.n_chunks}.npy'))
+        self.chunked_c_labels = list(np.load(f'c_label_{self.feature}_{self.affinity}_{self.n_chunks}.npy'))
 
     @property
     def patch_size(self):
