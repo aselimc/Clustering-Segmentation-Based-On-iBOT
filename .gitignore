@@ -1,9 +1,10 @@
 data/
 data
+c_*
 work_dirs/
 work_dirs
 cluster_group_*
-wandb/
+wandb/*
 wandb
 *.zip
 __pycache__/

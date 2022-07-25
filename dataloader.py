@@ -7,4 +7,4 @@ class PartialDatasetVOC(datasets.VOCSegmentation):
         self.percentage = percentage
         if percentage < 1:
             self.images = self.images[:int(percentage*len(self.images))]
-            self.targets = self.targets[:int(percentage*len(self.targets))]
+            self.masks = self.masks[:int(percentage*len(self.masks))]
