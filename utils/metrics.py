@@ -12,6 +12,8 @@ def mIoU(pred, label, num_classes=21, no_softmax = True):
     pred = pred.view(-1)
     label = label.view(-1)
     for sem_class in range(num_classes):
+        if sem_class == 0:
+            continue
         pred_inds = (pred == sem_class)
         target_inds = (label == sem_class)
         if target_inds.long().sum().item() == 0:
