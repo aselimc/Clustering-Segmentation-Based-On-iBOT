@@ -9,6 +9,7 @@ BACKGROUND_LABEL_PERCENTAGE="1.0"
 N_NEIGHBORS="20"
 BATCH_SIZE="16"
 NUM_WORKERS="4"
+PATCH_LABELING="coarse"
 
 for feature in ${FEATURES[*]}
 do
@@ -17,6 +18,7 @@ do
         python eval_knn.py --root $ROOT --weights $WEIGHTS --arch $ARCH \
         --patch_size $PATCH_SIZE --n_blocks $N_BLOCKS --feature $feature \
         --percentage $percentage --background_label_percentage $BACKGROUND_LABEL_PERCENTAGE \
-        --n_neighbors $N_NEIGHBORS --batch_size $BATCH_SIZE --workers $NUM_WORKERS
+        --n_neighbors $N_NEIGHBORS --batch_size $BATCH_SIZE --workers $NUM_WORKERS \
+        --patch_labeling $PATCH_LABELING
     done
 done
