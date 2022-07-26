@@ -49,6 +49,7 @@ class KNNSegmentator(nn.Module):
         else:
             self.device = torch.device('cpu')
 
+    @torch.no_grad()
     def forward(self, image):
         bs = image.size(0)
         test_feature = extract_feature(self.backbone, image, feature=self.feature, n_blocks=self.n_blocks)

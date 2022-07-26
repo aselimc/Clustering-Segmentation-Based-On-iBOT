@@ -40,6 +40,7 @@ class KMeansSegmentator(nn.Module):
 
         self.logger = logger
 
+    @torch.no_grad()
     def forward(self, image):
         bs = image.size(0)
         feat = extract_feature(self.backbone, image, feature=self.feature, n_blocks=self.n_blocks)
