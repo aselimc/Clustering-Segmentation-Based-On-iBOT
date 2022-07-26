@@ -55,8 +55,8 @@ def main(args):
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size)
 
     kmeans.fit(train_loader)
-    #miou, iou_std = kmeans.score(val_loader)
-    #print(f'mean intersecion over union: {miou} (±{iou_std}) ')
+    miou, iou_std = kmeans.score(val_loader)
+    print(f'mean intersecion over union: {miou} (±{iou_std}) ')
 
 
 def parser_args():
