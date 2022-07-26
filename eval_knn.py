@@ -31,6 +31,7 @@ def main(args):
                                      k=args.n_neighbors,
                                      num_classes=2 if args.segmentation == 'binary' else 21,
                                      feature=args.feature,
+                                     patch_labeling=args.patch_labeling,
                                      background_label_percentage=args.background_label_percentage,
                                      n_blocks=args.n_blocks,
                                      temperature=args.temperature,
