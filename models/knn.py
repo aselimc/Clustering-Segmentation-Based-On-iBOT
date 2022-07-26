@@ -144,12 +144,13 @@ class KNNSegmentator(nn.Module):
             image = image.to(device=self.device)
             target = target.to(device=self.device)
 
-            preds = self.forward(image)
-            for pred in preds:
-                top1.append(mIoU(pred, target))
+            pred = self.forward(image)
+            bs = pred.size(0)
+            for i in range(bs):
+                top1.append(mIoU(pred[i], target[i]))
 
             if idx % self.logger.config['eval_freq'] == 0 or idx == len(loader):
-                self.logger.log_segmentation(image[0], preds[0], target[0], step=idx, logit=False)
+                self.logger.log_segmentation(image[0], pred[0], target[0], step=idx, logit=False)
             progress_bar.update()
 
         top1 = torch.stack(top1)
