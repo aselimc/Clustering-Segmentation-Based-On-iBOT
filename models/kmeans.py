@@ -40,6 +40,8 @@ class KMeansSegmentator(nn.Module):
         self.percentage = percentage
         if percentage == 0.1:
             self.maximum_count_per_class = 1500
+        elif percentage == 0.3:
+            self.maximum_count_per_class = 10000
         elif percentage == 0.5:
             self.maximum_count_per_class = 30000
 
