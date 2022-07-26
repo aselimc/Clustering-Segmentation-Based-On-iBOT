@@ -51,7 +51,7 @@ class WBLogger:
         self.config = vars(args)
 
         run_name = datetime.now().strftime('%m.%d-%H:%M') +\
-                   f' k={args.n_neighbors} data={args.percentage} feat={args.feature}'
+                   f' data={args.percentage} feat={args.feature}'
 
         wandb.init(
         project=project,
