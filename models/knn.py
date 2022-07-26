@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torchvision.utils import make_grid
 from tqdm import tqdm
 
-from utils import mIoU
+from utils import extract_feature, mIoU
 
 
 class KNNSegmentator(nn.Module):
@@ -90,7 +90,7 @@ class KNNSegmentator(nn.Module):
         progress_bar = tqdm(total=len(loader))
         for image, target in loader:
             image = image.to(device=self.device)
-            feat = self.extract_feature(image)
+            feat = extract_feature(self.backbone, image, feature=self.feature, n_blocks=self.n_blocks)
             feat = feat.permute(2, 0, 1).flatten(start_dim=1)
             feat = feat.cpu()
             train_features.append(feat)
@@ -140,17 +140,6 @@ class KNNSegmentator(nn.Module):
             })
 
         return miou, iou_std
-
-    def extract_feature(self, images):
-        if self.feature == 'intermediate':
-            intermediate_output = self.backbone.get_intermediate_layers(images, self.n_blocks)
-        else:
-            intermediate_output = self.backbone.get_qkv(images, self.n_blocks, out=self.feature)
-        feat = torch.stack(intermediate_output, dim=2)
-        feat = torch.mean(feat, dim=2)
-        feat = feat[:, 1:]
-
-        return feat
 
     @property
     def patch_size(self):

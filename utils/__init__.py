@@ -880,3 +880,14 @@ def compute_map(ranks, gnd, kappas=[]):
     pr = pr / (nq - nempty)
 
     return map, aps, pr, prs
+
+def extract_feature(backbone, images, feature='intermediate', n_blocks=1):
+        if feature == 'intermediate':
+            intermediate_output = backbone.get_intermediate_layers(images, n_blocks)
+        else:
+            intermediate_output = backbone.get_qkv(images, n_blocks, out=feature)
+        feat = torch.stack(intermediate_output, dim=2)
+        feat = torch.mean(feat, dim=2)
+        feat = feat[:, 1:]
+
+        return feat
