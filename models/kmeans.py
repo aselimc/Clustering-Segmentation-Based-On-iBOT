@@ -108,7 +108,7 @@ class KMeansSegmentator(nn.Module):
                 actual_train_features.append(train_features[ldi[i]])
 
             actual_train_labels = torch.cat(actual_train_labels, dim=0).long()
-            actual_train_features = torch.cat(actual_train_features, dim=0).long()
+            actual_train_features = torch.cat(actual_train_features, dim=0)
             train_labels = actual_train_labels.reshape(-1, 256)
             train_features = actual_train_features.reshape(-1, 768)
             train_features = train_features.permute(1, 0).contiguous()
