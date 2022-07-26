@@ -6,7 +6,7 @@ from torchvision.utils import make_grid
 from torchpq.clustering import KMeans
 from tqdm import tqdm
 
-from utils import extract_feature, mIoU
+from utils import extract_feature, IoU
 
 
 class KMeansSegmentator(nn.Module):
@@ -129,13 +129,13 @@ class KMeansSegmentator(nn.Module):
             target = target.to(device=self.device)
 
             pred = self.forward(image)
-            top1.append(mIoU(pred, target))
+            top1.append(IoU(pred, target))
 
             if idx % self.logger.config['eval_freq'] == 0 or idx == len(loader):
                 self.logger.log_segmentation(image[0], pred[0], target[0], step=idx, logit=False)
             progress_bar.update()
 
-        top1 = torch.stack(top1)
+        top1 = torch.cat(top1, dim=0)
         miou = torch.mean(top1).item()
         iou_std = torch.std(top1).item()
 

@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 
 
-def mIoU(pred, gt, num_classes=21):
+def IoU(pred, gt, num_classes=21):
     ins_iou = []
     for instance in range(num_classes):
         if instance==0:
@@ -15,8 +15,7 @@ def mIoU(pred, gt, num_classes=21):
         iou_val = intersection/(union+1.)
         ins_iou.append(iou_val)
 
-    mean_iou = torch.mean(torch.stack(ins_iou))
-    return mean_iou
+    return torch.stack(ins_iou)
 
 
 def mIoUWithLogits(pred, label, num_classes=21):
