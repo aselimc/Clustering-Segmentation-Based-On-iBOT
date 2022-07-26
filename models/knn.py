@@ -19,6 +19,7 @@ class KNNSegmentator(nn.Module):
                  feature='intermediate',
                  patch_labeling='coarse',
                  background_label_percentage=0.2,
+                 weighted_majority_vote=False,
                  n_blocks=1,
                  temperature=1.0,
                  use_cuda=True):
@@ -40,6 +41,7 @@ class KNNSegmentator(nn.Module):
         self.feature = feature
         self.patch_labeling = patch_labeling
         self.background_label_percentage = background_label_percentage
+        self.weighted_majority_vote = weighted_majority_vote
         self.temperature = temperature
 
         self.use_cuda = use_cuda
@@ -70,14 +72,17 @@ class KNNSegmentator(nn.Module):
         retrieved_neighbors = [make_grid(nns, nrows, padding=0) for nns in retrieved_neighbors]
         retrieved_neighbors = torch.stack(retrieved_neighbors)
 
-        # weights for majority vote (more similarity = higher voting weight)
-        similarity = similarity.permute(0, 2, 1).view(bs, self.k, nrows, ncols)
-        similarity = F.interpolate(similarity,
-                                   size=[self.img_size, self.img_size],
-                                   mode='nearest',
-                                   recompute_scale_factor=False)
-        similarity = similarity.permute(0, 2, 3, 1).unsqueeze(-1) / self.temperature
-        similarity = torch.softmax(similarity, dim=3)
+        if self.weighted_majority_vote:
+            # more similarity = higher voting weight
+            similarity = similarity.permute(0, 2, 1).view(bs, self.k, nrows, ncols)
+            similarity = F.interpolate(similarity,
+                                    size=[self.img_size, self.img_size],
+                                    mode='nearest',
+                                    recompute_scale_factor=False)
+            similarity = similarity.permute(0, 2, 3, 1).unsqueeze(-1) / self.temperature
+            similarity = torch.softmax(similarity, dim=3)
+        else:
+            similarity = 1.0
 
         # voting
         retrieved_neighbors = retrieved_neighbors.permute(0, 2, 3, 1).long()
