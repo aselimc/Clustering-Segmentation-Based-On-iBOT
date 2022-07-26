@@ -39,8 +39,8 @@ CLASS_LABELS_MULTI = {
 class WBLogger:
 
     def __init__(self, args, 
-                 project="iBot",
-                 entity="dl_lab_enjoyers",
+                 project='iBot',
+                 entity='dl_lab_enjoyers',
                  group='linear_probe',
                  job_type='vit_base'):
         if args.segmentation == "binary":
@@ -50,12 +50,15 @@ class WBLogger:
 
         self.config = vars(args)
 
+        run_name = datetime.now().strftime('%m.%d-%H:%M') +\
+                   f' k={args.n_neighbors} data={args.percentage} feat={args.feature}'
+
         wandb.init(
         project=project,
         entity=entity,
         group=group,
         job_type=job_type,
-        name=datetime.now().strftime('%m.%d.%Y-%H:%M:%S'),
+        name=run_name,
         config=self.config)
 
     def log_segmentation(self, img, pred, segmentation, step, logit=True):
