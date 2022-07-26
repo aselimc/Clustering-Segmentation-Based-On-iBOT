@@ -19,6 +19,7 @@ class KMeansSegmentator(nn.Module):
                  n_blocks=1,
                  use_cuda=True,
                  distance='euclidean',
+                 percentage=0.1,
                  **kwargs):
         super(KMeansSegmentator, self).__init__()
 
@@ -35,6 +36,9 @@ class KMeansSegmentator(nn.Module):
 
         self.num_classes = num_classes
         self.patch_labeling = patch_labeling
+
+        self.percentage = percentage
+        self.maximum_count_per_class = 1500
 
         self.kmeans = KMeans(n_clusters=k, distance=distance, **kwargs)
 
@@ -91,6 +95,18 @@ class KMeansSegmentator(nn.Module):
         
         train_features = torch.cat(train_features, dim=0).permute(1, 0).contiguous()
         train_labels = torch.cat(train_labels, dim=0).long()
+
+        if self.percentage < 1.:
+            lab = torch.max(train_labels, dim=1).values
+            ldi, label = self._label_equal(lab)
+            
+            actual_train_labels = []
+            for i in range(len(ldi)):
+                actual_train_labels.append(train_labels[ldi[i]])
+
+            actual_train_labels = torch.cat(actual_train_labels, dim=0).long()
+            train_labels = actual_train_labels.reshape(-1, 256)
+           
         train_labels = F.one_hot(train_labels, self.num_classes)
 
         # fit clusters, i.e. get centroids (embed_dim, k)
@@ -158,6 +174,23 @@ class KMeansSegmentator(nn.Module):
         feat = feat[:, 1:]
 
         return feat
+
+    def _label_equal(self, label):
+        labelled_data_idx = []
+        previous_added_idx = []
+        counter_array = torch.zeros(size=(self.num_classes,))
+        print("\nBalancing data...")
+        progress_bar = tqdm(total=int(self.percentage*len(label)))
+        while len(labelled_data_idx) < int(self.percentage*len(label)):
+            random_idx = torch.randint(low=0, high=len(label), size=(1,)).item()
+            random_sample = label[random_idx].item()
+            if counter_array[random_sample] < self.maximum_count_per_class and random_idx not in previous_added_idx:
+                previous_added_idx.append(random_idx)
+                counter_array[random_sample] += 1
+                labelled_data_idx.append(random_idx)
+                progress_bar.update()
+        ldi=  np.array(labelled_data_idx)
+        return ldi, label
 
     @property
     def centroids(self):

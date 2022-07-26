@@ -36,6 +36,7 @@ def main(args):
                     init_mode=args.init,
                     n_redo=args.n_init,
                     max_iter=args.max_iter,
+                    percentage=args.percentage,
                     tol=args.tol)
 
     ## TRAINING DATASET ##
@@ -54,20 +55,20 @@ def main(args):
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size)
 
     kmeans.fit(train_loader)
-    miou, iou_std = kmeans.score(val_loader)
-    print(f'mean intersecion over union: {miou} (±{iou_std}) ')
+    #miou, iou_std = kmeans.score(val_loader)
+    #print(f'mean intersecion over union: {miou} (±{iou_std}) ')
 
 
 def parser_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', type=str, default="data")
-    parser.add_argument('--weights', type=str, default="weights/ViT-S16.pth")
+    parser.add_argument('--weights', type=str, default="weights/ViT-B16.pth")
     parser.add_argument('--arch', type=str, default="vit_base")
     parser.add_argument('--feature', type=str, choices=['intermediate', 'query', 'key', 'value'],
                         default='intermediate')
     parser.add_argument('--patch_size', type=int, default=16)
     parser.add_argument('--n_blocks', type=int, default=1)
-    parser.add_argument('--patch_labeling', type=str, choices=['coarse', 'fine'], default='fine')
+    parser.add_argument('--patch_labeling', type=str, choices=['coarse', 'fine'], default='coarse')
     parser.add_argument('--n_neighbors', type=int, default=20)
     parser.add_argument('--max_iter', type=int, default=300)
     parser.add_argument('--tol', type=float, default=1e-4),
