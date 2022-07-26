@@ -19,6 +19,6 @@ do
         --patch_size $PATCH_SIZE --n_blocks $N_BLOCKS --feature $feature \
         --percentage $percentage --background_label_percentage $BACKGROUND_LABEL_PERCENTAGE \
         --n_neighbors $N_NEIGHBORS --batch_size $BATCH_SIZE --workers $NUM_WORKERS \
-        --patch_labeling $PATCH_LABELING
+        --patch_labeling $PATCH_LABELING --smooth_mask
     done
 done
