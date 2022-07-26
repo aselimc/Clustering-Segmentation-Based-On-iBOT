@@ -3,25 +3,6 @@ from requests import patch
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-<<<<<<< HEAD
-
-class DownSampleBlock(nn.Module):
-
-    def __init__(self, in_channels, out_channels):
-        super(DownSampleBlock, self).__init__()
-
-        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1)
-        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1)
-        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-    
-    def forward(self, x):
-        out = torch.relu(self.conv1(x))
-        out = torch.relu(self.conv2(out))
-        out = self.pool(out)
-
-        return out
-=======
->>>>>>> jens
 
 
 class UpSampleBlock(nn.Module):
@@ -60,10 +41,6 @@ class ConvMultiLinearClassifier(nn.Module):
         self.conv_mask = nn.Conv2d(self.chn[3], n_classes, kernel_size=1, stride=1)
 
     def forward(self,x):
-<<<<<<< HEAD
-        
-=======
->>>>>>> jens
         out = self.block1(x)
         out = self.block2(out)
         out = self.block3(out)
@@ -188,35 +165,6 @@ class ConvSingleLinearClassifier(nn.Module):
         self.mode = upsample_mode
 
     def forward(self, x):
-<<<<<<< HEAD
-        enc = self.conv_input(x)
-        enc = self.downsample1(enc)
-        enc = self.downsample2(enc)
-        enc = self.downsample3(enc)
-        enc = self.downsample4(enc)
-        enc = self.conv_feat(enc)
-
-        dec = self.upsample1(enc)
-        dec = self.upsample2(dec)
-        dec = self.upsample3(dec)
-        dec = self.upsample4(dec)
-        dec = self.conv_mask(dec)
-
-        return dec
-
-class ConvSingleLinearClassifier(nn.Module):
-    def __init__(self, embed_dim, n_classes, patch_size, upsample_mode='bilinear'):
-        super().__init__()
-        self.conv1 = nn.Conv2d(embed_dim, n_classes, kernel_size=4, stride=2)
-        self.patch_size = patch_size
-        self.mode = upsample_mode
-
-    def forward(self, x):
         x = self.conv1(x)
         x = F.interpolate(x, size = [224, 224], mode= self.mode, align_corners=False, recompute_scale_factor=False)
         return x
-=======
-        x = self.conv1(x)
-        x = F.interpolate(x, size = [224, 224], mode= self.mode, align_corners=False, recompute_scale_factor=False)
-        return x
->>>>>>> jens
