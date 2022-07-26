@@ -11,18 +11,45 @@ from torch.utils.data import DataLoader
 from torchvision import datasets
 from tqdm import tqdm
 
+<<<<<<< HEAD
 from loader import PartialDatasetVOC
 from logger import WBLogger
 import models
 from models.classifier import *
 import transforms as _transforms
 from utils import mIoU, MaskedCrossEntropyLoss, load_pretrained_weights, extract_feature, cosine_scheduler
+=======
+from dataloader import PartialDatasetVOC
+from utils.logger import WBLogger
+import models
+from models.classifier import ConvMultiLinearClassifier, ConvSingleLinearClassifier
+import utils.transforms as _transforms
+from utils import mIoUWithLogits, MaskedCrossEntropyLoss, load_pretrained_weights
+from utils.scheduler import WarmStartCosineAnnealingLR
+
+>>>>>>> jens
 
 torch.backends.cudnn.benchmark = True
 global_step = 0
 
 
+<<<<<<< HEAD
 def train(loader, backbone, classifier, logger, criterion, optimizer, n_blocks, lr_scheduler, epoch):
+=======
+def extract_feature(backbone, img, n_blocks):
+    intermediate_output = backbone.get_intermediate_layers(img, n_blocks)
+    output = torch.stack(intermediate_output, dim=2)
+    output = torch.mean(output, dim=2)
+    output = output[:, 1:]
+    h, w = int(img.shape[2] / backbone.patch_embed.patch_size), int(img.shape[3] / backbone.patch_embed.patch_size)
+    dim = output.shape[-1]
+    output = output.reshape(-1, dim, h, w)
+
+    return output
+
+
+def train(loader, backbone, classifier, logger, criterion, optimizer, n_blocks):
+>>>>>>> jens
     global global_step
     backbone.eval()
     loss_l = []
@@ -36,7 +63,11 @@ def train(loader, backbone, classifier, logger, criterion, optimizer, n_blocks, 
         img = img.cuda()
         segmentation = segmentation.cuda()
         with torch.no_grad():
+<<<<<<< HEAD
             output = extract_feature(backbone, img, n=n_blocks)
+=======
+            output = extract_feature(backbone, img, n_blocks).detach()
+>>>>>>> jens
         pred_logits = classifier(output)
 
         loss = criterion(pred_logits, segmentation)
@@ -67,14 +98,22 @@ def validate(loader, backbone, classifier, logger, criterion, n_blocks):
         img = img.cuda()
         segmentation = segmentation.cuda()
         with torch.no_grad():
+<<<<<<< HEAD
             output = extract_feature(backbone, img, n=n_blocks)
+=======
+            output = extract_feature(backbone, img, n_blocks).detach()
+>>>>>>> jens
         pred_logits = classifier(output)
 
 
         # mask contours: compute pixelwise dummy entropy loss then set it to 0.0
         loss = criterion(pred_logits, segmentation)
         val_loss.append(loss.item())
+<<<<<<< HEAD
         miou = mIoU(pred=pred_logits, label=segmentation, num_classes=21)
+=======
+        miou = mIoUWithLogits(pred_logits, segmentation)
+>>>>>>> jens
         miou_arr.append(miou.item())
 
         if idx == random_pic_select:
@@ -85,7 +124,7 @@ def validate(loader, backbone, classifier, logger, criterion, n_blocks):
 
 
 def main(args):
-    logger = WBLogger(args)
+    logger = WBLogger(args, group='linear_probe', job_type=args.arch)
 
     ################################# BACKBONE & CLASSIFIER INIT #################################
     # Loading backbone ViT from the models dir
@@ -94,6 +133,14 @@ def main(args):
         patch_size=args.patch_size,
         num_classes=0
     )
+<<<<<<< HEAD
+=======
+
+    load_pretrained_weights(backbone, args.weights,
+                            checkpoint_key="teacher",
+                            model_name=args.arch,
+                            patch_size=args.patch_size)
+>>>>>>> jens
     backbone = backbone.cuda()
 
     # Loading the weights from a full .ckpt file that can be downloaded from 
@@ -107,6 +154,7 @@ def main(args):
 
     # Number of blocks of ViT to extract information and feature space dimension based on this
     n_blocks = args.n_blocks
+<<<<<<< HEAD
     embed_dim = backbone.embed_dim # * n_blocks
 
     # Classifier type definitions
@@ -123,6 +171,19 @@ def main(args):
                                       upsample_mode=args.upsample, patch_size=args.patch_size).cuda()
     
     ################################# DATASETS #################################
+=======
+    embed_dim = backbone.embed_dim# * n_blocks
+    
+    if args.classifier_type == "ConvMultiLinear":
+        classifier = ConvMultiLinearClassifier(embed_dim,
+                                        n_classes=2 if args.segmentation == 'binary' else 21,
+                                        upsample_mode=args.upsample).cuda()
+    else:
+        classifier = ConvSingleLinearClassifier(embed_dim,
+                                                n_classes=2 if args.segmentation == 'binary' else 21,
+                                                patch_size=args.patch_size,
+                                                upsample_mode=args.upsample).cuda()
+>>>>>>> jens
 
     # Transformers for training and validation datasets
     transformations = [
@@ -130,12 +191,20 @@ def main(args):
         _transforms.RandomHorizontalFlip(),
         _transforms.ToTensor(),
         _transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
+<<<<<<< HEAD
         ]
     val_transformations = [
+=======
+        ] + ([_transforms.ToBinaryMask()] if args.segmentation == 'binary' else [])
+          + [_transforms.MergeContours()]
+    )
+    val_transform = _transforms.Compose([
+>>>>>>> jens
         _transforms.Resize(256, interpolation=_transforms.INTERPOLATION_BICUBIC),
         _transforms.CenterCrop(224),
         _transforms.ToTensor(),
         _transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+<<<<<<< HEAD
         ]
     if args.segmentation == 'binary':
         transformations.append(_transforms.ToBinaryMask())
@@ -150,6 +219,14 @@ def main(args):
     # Dataset and Loader initializations
     train_dataset = PartialDatasetVOC(percentage = args.percentage, root=args.root, image_set='train', download=args.download_data, transforms=train_transform)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size)
+=======
+        ] + ([_transforms.ToBinaryMask()] if args.segmentation == 'binary' else [])
+          + [_transforms.MergeContours()]
+    )
+
+    train_dataset = PartialDatasetVOC(percentage = args.percentage, root=args.root, image_set='train', download=False, transforms=train_transform)
+    train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.workers)
+>>>>>>> jens
     val_dataset = datasets.VOCSegmentation(root=args.root, image_set='val', download=False, transforms=val_transform)
     val_loader = DataLoader(val_dataset, batch_size=1)
 
@@ -175,6 +252,11 @@ def main(args):
         epochs=args.epochs,
         niter_per_ep=len(train_loader)
     )
+<<<<<<< HEAD
+=======
+    lr_scheduler = WarmStartCosineAnnealingLR(optimizer, args.epochs, args.warmup_epochs, min_lr=0)
+
+>>>>>>> jens
     criterion = MaskedCrossEntropyLoss()
 
     ################################# TRAINING LOOP #################################
@@ -207,6 +289,7 @@ def main(args):
 
 def parser_args():
     parser = argparse.ArgumentParser()
+<<<<<<< HEAD
     parser.add_argument('--root', type=str, default="data/VOCtrainval_11-May-2012")
     parser.add_argument('--weights', type=str, default="weights/checkpoint.pth")
     parser.add_argument('--arch', type=str, default="vit_large")
@@ -224,6 +307,23 @@ def parser_args():
     parser.add_argument('--optimizer', type=str, choices=["SGD", "AdamW"], default="SGD")
     parser.add_argument('--snapshot_freq', type=int, default=10)
     parser.add_argument('--download_data', type=bool, default=False)
+=======
+    parser.add_argument('--root', type=str, default="data")
+    parser.add_argument('--weights', type=str, default="weights/ViT-S16.pth")
+    parser.add_argument('--arch', type=str, default="vit_small")
+    parser.add_argument('--classifier_type', type=str, default="ConvSingleLinear")
+    parser.add_argument('--patch_size', type=int, default=16)
+    parser.add_argument('--epochs', type=int, default=100)
+    parser.add_argument('--warmup_epochs', type=int, default=10)
+    parser.add_argument('--n_blocks', type=int, default=4)
+    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument("--lr", type=float, default=1e-3)
+    parser.add_argument("--percentage", type=float, default=0.1)
+    parser.add_argument("--upsample", type=str, choices=['nearest', 'bilinear'], default='nearest')
+    parser.add_argument("--segmentation", type=str, choices=['binary', 'multi'], default='multi')
+    parser.add_argument("--eval_freq", type=int, default=5)
+    parser.add_argument("--workers", type=int, default=4)
+>>>>>>> jens
 
     return parser.parse_args()
 

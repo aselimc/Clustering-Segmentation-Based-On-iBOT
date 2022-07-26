@@ -9,12 +9,17 @@ from torch.utils.data import DataLoader
 from torchvision import datasets
 from tqdm import tqdm
 
+<<<<<<< HEAD
 from loader import PartialDatasetVOC
 from logger import WBLogger
+=======
+from dataloader import PartialDatasetVOC
+from utils.logger import WBLogger
+>>>>>>> jens
 import models
-from models.classifier import UNetClassifier
-import transforms as _transforms
-from utils import mIoU, MaskedCrossEntropyLoss
+from models.classifier import UNet
+import utils.transforms as _transforms
+from utils import mIoUWithLogits, MaskedCrossEntropyLoss
 
 
 global_step = 0
@@ -60,7 +65,7 @@ def validate(loader, classifier, logger, criterion):
         # mask contours: compute pixelwise dummy entropy loss then set it to 0.0
         loss = criterion(pred_logits, segmentation)
         val_loss.append(loss.item())
-        miou = mIoU(pred_logits, segmentation)
+        miou = mIoUWithLogits(pred_logits, segmentation)
         miou_arr.append(miou.item())
 
         if random_pic_select==idx:
@@ -71,10 +76,11 @@ def validate(loader, classifier, logger, criterion):
 
 
 def main(args):
-    logger = WBLogger(args)
+    logger = WBLogger(args, group='linear_probe', job_type=args.arch)
 
-    classifier = UNetClassifier(n_classes=2 if args.segmentation == 'binary' else 21,
-                                upsample_mode=args.upsample).cuda()
+    classifier = UNet(n_channels=3,
+                      n_classes=2 if args.segmentation == 'binary' else 21,
+                      bilinear=(args.upsample == 'bilinear')).cuda()
 
     ## TRAINING DATASET ##
     train_transform = _transforms.Compose([
