@@ -8,6 +8,7 @@ from torchvision.utils import make_grid
 from tqdm import tqdm
 
 from utils import extract_feature, mIoU
+from utils.transforms import PatchwiseSmoothMask
 
 
 class KNNSegmentator(nn.Module):
@@ -19,6 +20,7 @@ class KNNSegmentator(nn.Module):
                  feature='intermediate',
                  patch_labeling='coarse',
                  background_label_percentage=0.2,
+                 smooth_mask=True,
                  weighted_majority_vote=False,
                  n_blocks=1,
                  temperature=1.0,
@@ -43,6 +45,11 @@ class KNNSegmentator(nn.Module):
         self.background_label_percentage = background_label_percentage
         self.weighted_majority_vote = weighted_majority_vote
         self.temperature = temperature
+
+        if smooth_mask:
+            self.smooth = PatchwiseSmoothMask(self.patch_size)
+        else:
+            self.smooth = nn.Identity()
 
         self.use_cuda = use_cuda
         if use_cuda:
@@ -89,6 +96,7 @@ class KNNSegmentator(nn.Module):
         retrieved_neighbors = F.one_hot(retrieved_neighbors, self.num_classes)
         vote = (similarity * retrieved_neighbors).sum(dim=3)
         pred = torch.argmax(vote, dim=-1)
+        pred = self.smooth(pred)
 
         return pred
 

@@ -7,6 +7,7 @@ from torchpq.clustering import KMeans
 from tqdm import tqdm
 
 from utils import extract_feature, mIoU
+from utils.transforms import PatchwiseSmoothMask
 
 
 class KMeansSegmentator(nn.Module):
@@ -16,6 +17,7 @@ class KMeansSegmentator(nn.Module):
                  num_classes=21,
                  feature='intermediate',
                  patch_labeling='coarse',
+                 smooth_mask=True,
                  n_blocks=1,
                  use_cuda=True,
                  distance='euclidean',
@@ -35,6 +37,11 @@ class KMeansSegmentator(nn.Module):
 
         self.num_classes = num_classes
         self.patch_labeling = patch_labeling
+
+        if smooth_mask:
+            self.smooth = PatchwiseSmoothMask(self.patch_size)
+        else:
+            self.smooth = nn.Identity()
 
         self.kmeans = KMeans(n_clusters=k, distance=distance, **kwargs)
 
@@ -59,6 +66,7 @@ class KMeansSegmentator(nn.Module):
         nrows = self.img_size // self.patch_size
         pred = [make_grid(patch_pred, nrows, padding=0)[0] for patch_pred in patch_preds]
         pred = torch.stack(pred)
+        pred = self.smooth(pred)
 
         return pred
 

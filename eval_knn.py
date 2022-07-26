@@ -33,6 +33,7 @@ def main(args):
                                      feature=args.feature,
                                      patch_labeling=args.patch_labeling,
                                      background_label_percentage=args.background_label_percentage,
+                                     smooth_mask=args.smooth_mask,
                                      weighted_majority_vote=args.weighted_majority_vote,
                                      n_blocks=args.n_blocks,
                                      temperature=args.temperature,
@@ -67,6 +68,7 @@ def parser_args():
                         default='intermediate')
     parser.add_argument('--patch_labeling', type=str, choices=['coarse', 'fine'], default='coarse')
     parser.add_argument('--n_neighbors', type=int, default=20)
+    parser.add_argument('--smooth_mask', action='store_true')
     parser.add_argument('--weighted_majority_vote', action='store_true')
     parser.add_argument('--patch_size', type=int, default=16)
     parser.add_argument('--n_blocks', type=int, default=1)
