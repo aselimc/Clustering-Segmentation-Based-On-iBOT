@@ -42,7 +42,7 @@ class KMeansSegmentator(nn.Module):
 
     def forward(self, image):
         bs = image.size(0)
-        feat = self._extract_feature(image)
+        feat = extract_feature(self.backbone, image, feature=self.feature, n_blocks=self.n_blocks)
         feat = feat.flatten(start_dim=0, end_dim=1).permute(1, 0).contiguous()
         feat = feat.cpu()
 

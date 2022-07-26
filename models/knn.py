@@ -51,7 +51,7 @@ class KNNSegmentator(nn.Module):
 
     def forward(self, image):
         bs = image.size(0)
-        test_feature = self.extract_feature(image)
+        test_feature = extract_feature(self.backbone, image, feature=self.feature, n_blocks=self.n_blocks)
 
         # patchwise cosine similarity between test feature & all train features
         # (bs x num_patches x embed_dim) * (embed_dim x (num_patches * num_train))
