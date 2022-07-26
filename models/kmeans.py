@@ -93,7 +93,8 @@ class KMeansSegmentator(nn.Module):
             train_labels.append(target)
             progress_bar.update()
         
-        train_features = torch.cat(train_features, dim=0).permute(1, 0).contiguous()
+        #train_features = torch.cat(train_features, dim=0).permute(1, 0).contiguous()
+        train_features = torch.cat(train_features, dim=0)
         train_labels = torch.cat(train_labels, dim=0).long()
 
         if self.percentage < 1.:
@@ -101,12 +102,19 @@ class KMeansSegmentator(nn.Module):
             ldi, label = self._label_equal(lab)
             
             actual_train_labels = []
+            actual_train_features = []
             for i in range(len(ldi)):
                 actual_train_labels.append(train_labels[ldi[i]])
+                actual_train_features.append(train_features[ldi[i]])
 
             actual_train_labels = torch.cat(actual_train_labels, dim=0).long()
+            actual_train_features = torch.cat(actual_train_features, dim=0).long()
             train_labels = actual_train_labels.reshape(-1, 256)
-           
+            train_features = actual_train_features.reshape(-1, 768)
+            train_features = train_features.permute(1, 0).contiguous()
+        else:
+            train_features = train_features.permute(1, 0).contiguous()
+
         train_labels = F.one_hot(train_labels, self.num_classes)
 
         # fit clusters, i.e. get centroids (embed_dim, k)
@@ -116,7 +124,6 @@ class KMeansSegmentator(nn.Module):
         # label clusters
         print("Assigning cluster labels...")
         cluster_assignment = self.kmeans.predict(train_features)
-        print("cluster_assignment", cluster_assignment.size(), cluster_assignment[0])
         train_features = train_features.to(device=self.device)
         train_labels = train_labels.to(device=self.device)
 
