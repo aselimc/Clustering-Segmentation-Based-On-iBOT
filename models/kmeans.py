@@ -116,6 +116,7 @@ class KMeansSegmentator(nn.Module):
         # label clusters
         print("Assigning cluster labels...")
         cluster_assignment = self.kmeans.predict(train_features)
+        print("cluster_assignment", cluster_assignment.shape(), cluster_assignment[0])
         train_features = train_features.to(device=self.device)
         train_labels = train_labels.to(device=self.device)
 
