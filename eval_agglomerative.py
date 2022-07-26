@@ -54,13 +54,13 @@ def main(args):
     train_dataset = PartialDatasetVOC(percentage = args.percentage, root=args.root, image_set='train', download=False, transforms=transform)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.workers)
     val_dataset = datasets.VOCSegmentation(root=args.root, image_set='val', download=False, transforms=transform)
-    val_loader = DataLoader(val_dataset, batch_size=1)
+    val_loader = DataLoader(val_dataset, batch_size=args.batch_size)
 
     if args.fit_clusters:
         agglomerative.fit(train_loader)
     else:
         agglomerative.load_cluster_centroids()
-    miou, std_miou = agglomerative.forward(val_loader)
+    miou, std_miou = agglomerative.score(val_loader)
     print(f'mean intersecion over union: {miou} (±{std_miou}) ')
 
 
@@ -84,7 +84,7 @@ def parser_args():
     parser.add_argument("--segmentation", type=str, choices=['binary', 'multi'], default='multi')
     parser.add_argument("--eval_freq", type=int, default=5)
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument('--n_chunks', type=int, default=20)
+    parser.add_argument('--n_chunks', type=int, default=15)
     parser.add_argument('--purity', type=bool, default=False)
     parser.add_argument('--n_clusters', type=int, default=80)
     parser.add_argument('--fit_clusters', type=bool, default=False)

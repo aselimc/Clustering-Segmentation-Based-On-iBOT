@@ -58,11 +58,14 @@ class WBLogger:
         name=datetime.now().strftime('%m.%d.%Y-%H:%M:%S'),
         config=self.config)
         
-    def log_segmentation(self, img, pred_logits, segmentation, step):
+    def log_segmentation(self, img, pred, segmentation, step, logit=True):
+        if logit:
+            pred = torch.argmax(pred, dim=1).squeeze(0)
+        
         pred_segmentation = wandb.Image(img,
             masks={
                 "predictions": {
-                    "mask_data": torch.argmax(pred_logits, dim=1).squeeze(0).cpu().numpy(),
+                    "mask_data": pred.cpu().numpy(),
                     "class_labels": self.class_labels
                     }
                 })
@@ -77,27 +80,7 @@ class WBLogger:
             "Pred Segmentation": pred_segmentation,
             "GT Segmentation": gt_segmentation},
             step=step)
-
-    def log_cluster_segmentation(self, img, preds, segmentation, step):
-        pred_segmentation = wandb.Image(img,
-            masks={
-                "predictions": {
-                    "mask_data": preds.squeeze().squeeze().cpu().numpy(),
-                    "class_labels": self.class_labels
-                    }
-                })
-        gt_segmentation = wandb.Image(img,
-            masks={
-                "ground_truth": {
-                    "mask_data": segmentation.squeeze(0).cpu().numpy(),
-                    "class_labels": self.class_labels
-                    }
-                })
-        wandb.log({
-            "Pred Segmentation": pred_segmentation,
-            "GT Segmentation": gt_segmentation},
-            step=step)
-
+                        
     def log_scalar(self, scalars, step):
         wandb.log(scalars, step=step)
 

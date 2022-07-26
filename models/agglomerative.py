@@ -52,31 +52,48 @@ class AgglomerativeClustering(nn.Module):
         self.global_step =0
 
     @torch.no_grad()
-    def forward(self, loader):
+    def score(self, loader):
         print("Evaluating on different chunks")
         progress_bar = tqdm(total=len(loader))
-        image_miou = []
-        for idx, (image, seg) in enumerate(loader):
-            image = image.cuda()
-            predictions = np.stack(self.predict(image), axis=0).squeeze(1)
-            pred = mode(predictions, axis=0)[0]
-            pred = torch.Tensor(pred)
-            chunk_miou = mIoU(pred, seg, no_softmax=False)
-            self.logger.log_scalar({'chunk_miou':chunk_miou}, self.global_step)
-            if idx % 5 ==0:
-                    self.logger.log_cluster_segmentation(image[0], pred, seg, self.global_step)
+        top1 = []
+
+        for idx, (images, seg) in enumerate(loader):
+            images = images.to(self.device)
+            seg = seg.to(self.device)
+            preds = []
+            for image, gt in zip(images, seg):
+                pred = np.stack(self.forward(image.unsqueeze(0)), axis=0).squeeze(1)
+                pred = torch.Tensor(mode(pred, axis=0)[0]).to(self.device)
+                chunk_miou = mIoU(pred, gt)
+                preds.append(pred)
+                top1.append(chunk_miou)
+            pred = torch.stack(preds, dim=0).squeeze(1).squeeze(1)            
+            self.logger.log_scalar({'miou':torch.mean(torch.stack(top1)).item()}, idx)
+
+            if idx % self.logger.config['eval_freq'] == 0 or idx == len(loader):
+                self.logger.log_segmentation(images[0], pred[0], seg[0], step=idx, logit=False)
+                self.logger.log_segmentation(images[1], pred[1], seg[1], step=idx+1, logit=False)
+            progress_bar.update()
+
             self.global_step += 1
             progress_bar.update()
-            image_miou.append(chunk_miou)
-        image_miou = np.array(image_miou)
-        average_miou = np.mean(image_miou)
-        std_miou = np.std(image_miou)
-        self.logger.log_scalar_summary({'average_miou':average_miou, 'std_miou': std_miou})
-        return average_miou, std_miou
+            
+
+        top1 = np.array(top1)
+        top1 = torch.stack(top1)
+        miou = torch.mean(top1).item()
+        iou_std = torch.std(top1).item()
+
+        self.logger.log_scalar_summary({
+                "mIoU": miou,
+                "IoU std": iou_std,
+            })
+
+        return miou, iou_std
 
 
     @torch.no_grad()
-    def predict(self, image):
+    def forward(self, image):
         if not(len(self.chunked_c_centroids) or len(self.chunked_c_labels)):
             print("Data has not been fit!")
             pass
@@ -89,9 +106,21 @@ class AgglomerativeClustering(nn.Module):
             feat = feat.cpu()
             image_labels = self._predict(feat, centroid, label)
             image_labels = image_labels.view(bs, 1, h,h)
-            image_labels = torch.nn.functional.interpolate(image_labels, size=[224, 224])
+            image_labels = F.interpolate(image_labels,
+                                   size=[self.img_size, self.img_size],
+                                   mode='nearest',
+                                   recompute_scale_factor=False)
             chunk_labels.append(image_labels)
         return chunk_labels
+
+
+    def _predict(self, feature, centroids, labels):
+        distance = np.zeros(shape=(centroids.shape[0], feature.shape[0]))
+        for idx, cluster_centroid in enumerate(centroids):
+            distance[idx] = pairwise_distances(feature, cluster_centroid.reshape(1, -1), metric=self.affinity).ravel()
+        predict_label = np.argmin(distance.T, axis=1)
+
+        return torch.Tensor(labels[predict_label])  
 
     @torch.no_grad()
     def fit(self, loader):
@@ -155,13 +184,7 @@ class AgglomerativeClustering(nn.Module):
         del feature
         return cluster_centroids, cluster_data_labels
 
-    def _predict(self, feature, centroids, labels):
-        distance = np.zeros(shape=(centroids.shape[0], feature.shape[0]))
-        for idx, cluster_centroid in enumerate(centroids):
-            distance[idx] = pairwise_distances(feature, cluster_centroid.reshape(1, -1), metric="cosine").ravel()
-        predict_label = np.argmin(distance.T, axis=1)
-
-        return torch.Tensor(labels[predict_label])     
+   
 
     def _get_cluster_centroids(self, model, feature):
         cluster_centroids = []
@@ -213,12 +236,12 @@ class AgglomerativeClustering(nn.Module):
         return feat
 
     def save_cluster_centroids(self):
-        np.save(f'c_centroid_{self.feature}_{self.affinity}_{self.n_chunks}.npy', np.array(self.chunked_c_centroids))
-        np.save(f'c_label_{self.feature}_{self.affinity}_{self.n_chunks}.npy', np.array(self.chunked_c_labels))
+        np.save(f'c_centroid_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}.npy', np.array(self.chunked_c_centroids))
+        np.save(f'c_label_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}.npy', np.array(self.chunked_c_labels))
 
     def load_cluster_centroids(self):
-        self.chunked_c_centroids = list(np.load(f'c_centroid_{self.feature}_{self.affinity}_{self.n_chunks}.npy'))
-        self.chunked_c_labels = list(np.load(f'c_label_{self.feature}_{self.affinity}_{self.n_chunks}.npy'))
+        self.chunked_c_centroids = list(np.load(f'c_centroid_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}.npy'))
+        self.chunked_c_labels = list(np.load(f'c_label_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}.npy'))
 
     @property
     def patch_size(self):
