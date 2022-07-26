@@ -1,5 +1,6 @@
 import math
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -17,6 +18,7 @@ class KNNSegmentator(nn.Module):
                  num_classes=21,
                  feature='intermediate',
                  patch_labeling='coarse',
+                 background_label_percentage=0.2,
                  n_blocks=1,
                  temperature=1.0,
                  use_cuda=True):
@@ -37,6 +39,7 @@ class KNNSegmentator(nn.Module):
         self.num_classes = num_classes
         self.feature = feature
         self.patch_labeling = patch_labeling
+        self.background_label_percentage = background_label_percentage
         self.temperature = temperature
 
         self.use_cuda = use_cuda
@@ -91,7 +94,7 @@ class KNNSegmentator(nn.Module):
         for image, target in loader:
             image = image.to(device=self.device)
             feat = extract_feature(self.backbone, image, feature=self.feature, n_blocks=self.n_blocks)
-            feat = feat.permute(2, 0, 1).flatten(start_dim=1)
+            feat = feat.flatten(start_dim=0, end_dim=1)
             feat = feat.cpu()
             train_features.append(feat)
 
@@ -102,15 +105,27 @@ class KNNSegmentator(nn.Module):
                 target = F.one_hot(target, self.num_classes)
                 target = torch.argmax(target.sum(dim=2), dim=2)
                 target = target.unsqueeze(2).expand(-1, self.num_patches, self.patch_size**2)
+            else:
                 target = target.permute(0, 2, 1)
-            target = target.permute(1, 0, 2).flatten(start_dim=1)
+            target = target.flatten(start_dim=0, end_dim=1)
             target = target.byte().cpu()
             train_labels.append(target)
 
             progress_bar.update()
 
-        self.train_features = torch.cat(train_features, dim=1)
-        self.train_labels = torch.cat(train_labels, dim=1)
+        self.train_features = torch.cat(train_features, dim=0)
+        self.train_labels = torch.cat(train_labels, dim=0)
+
+        # class balancing
+        is_background = (self.train_labels == 0).all(dim=1)
+        idx_background = torch.nonzero(is_background, as_tuple=False).squeeze(1).numpy()
+        idx_foreground = torch.nonzero(~is_background, as_tuple=False).squeeze(1).numpy()
+        size_undersample = int(len(idx_background) * self.background_label_percentage)
+        idx_undersample = np.random.choice(size_undersample, size=size_undersample, replace=False)
+        idx_train = np.concatenate([idx_foreground, idx_undersample], axis=0)
+
+        self.train_features = self.train_features[idx_train].permute(1, 0)
+        self.train_labels = self.train_labels[idx_train].permute(1, 0)
 
     @torch.no_grad()
     def score(self, loader):
