@@ -159,7 +159,9 @@ class KMeansSegmentator(nn.Module):
             target = target.to(device=self.device)
 
             pred = self.forward(image)
-            top1.append(mIoU(pred, target))
+            bs = pred.size(0)
+            for i in range(bs):
+                top1.append(mIoU(pred[i], target[i]))
 
             if idx % self.logger.config['eval_freq'] == 0 or idx == len(loader):
                 self.logger.log_segmentation(image[0], pred[0], target[0], step=idx, logit=False)
