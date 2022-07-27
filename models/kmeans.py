@@ -38,7 +38,9 @@ class KMeansSegmentator(nn.Module):
         self.patch_labeling = patch_labeling
 
         self.percentage = percentage
-        if percentage == 0.1:
+        if percentage == 0.01:
+            self.maximum_count_per_class = 100
+        elif percentage == 0.1:
             self.maximum_count_per_class = 1500
         elif percentage == 0.3:
             self.maximum_count_per_class = 5000
