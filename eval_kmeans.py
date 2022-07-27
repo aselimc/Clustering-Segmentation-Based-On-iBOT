@@ -30,6 +30,7 @@ def main(args):
                     logger,
                     k=args.n_neighbors,
                     feature=args.feature,
+                    smooth_mask=args.smooth_mask,
                     n_blocks=args.n_blocks,
                     use_cuda=True,
                     distance=args.distance,
@@ -70,6 +71,7 @@ def parser_args():
     parser.add_argument('--n_blocks', type=int, default=1)
     parser.add_argument('--patch_labeling', type=str, choices=['coarse', 'fine'], default='coarse')
     parser.add_argument('--n_neighbors', type=int, default=20)
+    parser.add_argument('--smooth_mask', action='store_true')
     parser.add_argument('--max_iter', type=int, default=300)
     parser.add_argument('--tol', type=float, default=1e-4),
     parser.add_argument('--init', type=str, choices=['kmeans++', 'random'], default='kmeans++')
