@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from tqdm import tqdm
 
 from .vision_transformer import VisionTransformer, vit_tiny, vit_small, vit_base, vit_large
 from utils.transforms import PatchwiseSmoothMask
@@ -34,6 +35,7 @@ class _BaseSegmentator(nn.Module):
         self.feature = feature
         self.patch_labeling = patch_labeling
         self.background_label_percentage = background_label_percentage
+        self.smooth_mask = smooth_mask
 
         if smooth_mask:
             self.smooth = PatchwiseSmoothMask(self.patch_size)
@@ -55,6 +57,30 @@ class _BaseSegmentator(nn.Module):
 
     def score(self, loader):
         raise NotImplementedError
+
+    def _transform_data(self, loader):
+        train_features = []
+        train_labels = []
+        self.cluster_labels = []
+
+        print("Extracting ViT features...")
+        progress_bar = tqdm(total=len(loader))
+        for image, target in loader:
+            image = image.to(device=self.device)
+            feat = self._extract_feature(image)
+            feat = feat.cpu()
+            train_features.append(feat)
+
+            target = target.to(device=self.device)
+            target = self._mask_to_patches(target)
+            target = target.cpu()
+            train_labels.append(target)
+            progress_bar.update()
+
+        train_features = torch.cat(train_features, dim=0)
+        train_labels = torch.cat(train_labels, dim=0)
+
+        return train_features, train_labels
 
     def _extract_feature(self, image, flatten=True):
         if self.feature == 'intermediate':

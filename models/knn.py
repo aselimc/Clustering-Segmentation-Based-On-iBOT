@@ -74,24 +74,7 @@ class KNNSegmentator(_BaseSegmentator):
 
     @torch.no_grad()
     def fit(self, loader):
-        train_features, train_labels = [], []
-
-        progress_bar = tqdm(total=len(loader))
-        for image, target in loader:
-            image = image.to(device=self.device)
-            feat = self._extract_feature(image)
-            feat = feat.cpu()
-            train_features.append(feat)
-
-            target = target.to(device=self.device)
-            target = self._mask_to_patches(target)
-            target = target.cpu()
-            train_labels.append(target)
-
-            progress_bar.update()
-
-        self.train_features = torch.cat(train_features, dim=0)
-        self.train_labels = torch.cat(train_labels, dim=0)
+        self.train_features, self.train_labels = self._transform_data(loader)
 
         # class balancing
         is_background = (self.train_labels == 0).all(dim=1)

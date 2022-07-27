@@ -55,26 +55,9 @@ class KMeansSegmentator(_BaseSegmentator):
 
     @torch.no_grad()
     def fit(self, loader):
-        train_features = []
-        train_labels = []
-        self.cluster_labels = []
-
-        print("Extracting ViT features...")
-        progress_bar = tqdm(total=len(loader))
-        for image, target in loader:
-            image = image.to(device=self.device)
-            feat = self._extract_feature(image)
-            feat = feat.cpu()
-            train_features.append(feat)
-
-            target = target.to(device=self.device)
-            target = self._mask_to_patches(target)
-            target = target.cpu()
-            train_labels.append(target)
-            progress_bar.update()
-
-        train_features = torch.cat(train_features, dim=0).permute(1, 0).contiguous()
-        train_labels = torch.cat(train_labels, dim=0).long()
+        train_features, train_labels = self._transform_data(loader)
+        train_features = train_features.permute(1, 0).contiguous()
+        train_labels = train_labels.long()
         train_labels = F.one_hot(train_labels, self.num_classes)
 
         # fit clusters, i.e. get centroids (embed_dim, k)
@@ -83,6 +66,7 @@ class KMeansSegmentator(_BaseSegmentator):
 
         # label clusters
         print("Assigning cluster labels...")
+        self.cluster_labels = []
         cluster_assignment = self.kmeans.predict(train_features)
         train_features = train_features.to(device=self.device)
         train_labels = train_labels.to(device=self.device)
