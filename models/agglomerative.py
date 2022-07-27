@@ -8,6 +8,7 @@ from scipy.stats import mode
 import numpy as np
 from sklearn.metrics import pairwise_distances
 from utils.metrics import mIoU
+from utils.transforms import PatchwiseSmoothMask
 
 class AgglomerativeClustering(nn.Module):
     
@@ -27,7 +28,9 @@ class AgglomerativeClustering(nn.Module):
                 n_classes=21,
                 affinity='euclidean',
                 linkage='ward',
-                percentage=1.0    
+                percentage=1.0,
+                smooth_mask=True,
+                k=1,  
         ):
         super(AgglomerativeClustering, self).__init__()
         self.device = torch.device('cuda') if use_cuda else torch.device('cpu')
@@ -50,6 +53,9 @@ class AgglomerativeClustering(nn.Module):
         self.chunked_c_centroids : List
         self.chunked_c_labels: List
         self.global_step =0
+        self.smooth = PatchwiseSmoothMask(self.patch_size) if smooth_mask else nn.Identity()
+        self.k = k
+
 
     @torch.no_grad()
     def score(self, loader):
@@ -62,25 +68,26 @@ class AgglomerativeClustering(nn.Module):
             seg = seg.to(self.device)
             preds = []
             for image, gt in zip(images, seg):
-                pred = np.stack(self.forward(image.unsqueeze(0)), axis=0).squeeze(1)
-                pred = torch.Tensor(mode(pred, axis=0)[0]).to(self.device)
+                pred = self.forward(image.unsqueeze(0))
+                pred = torch.Tensor(mode(pred.cpu(), axis=0)[0]).to(self.device)
+                pred = self.smooth(pred.squeeze(0))
                 chunk_miou = mIoU(pred, gt)
                 preds.append(pred)
                 top1.append(chunk_miou)
             pred = torch.stack(preds, dim=0).squeeze(1).squeeze(1)            
-            self.logger.log_scalar({'miou':torch.mean(torch.stack(top1)).item()}, idx)
+            self.logger.log_scalar({'miou':torch.mean(torch.Tensor(top1)).item()}, idx)
 
             if idx % self.logger.config['eval_freq'] == 0 or idx == len(loader):
                 self.logger.log_segmentation(images[0], pred[0], seg[0], step=idx, logit=False)
-                self.logger.log_segmentation(images[1], pred[1], seg[1], step=idx+1, logit=False)
+                self.logger.log_segmentation(images[2], pred[2], seg[2], step=idx+1, logit=False)
+
             progress_bar.update()
 
             self.global_step += 1
             progress_bar.update()
             
 
-        top1 = np.array(top1)
-        top1 = torch.stack(top1)
+        top1 = torch.Tensor(top1)
         miou = torch.mean(top1).item()
         iou_std = torch.std(top1).item()
 
@@ -94,33 +101,37 @@ class AgglomerativeClustering(nn.Module):
 
     @torch.no_grad()
     def forward(self, image):
-        if not(len(self.chunked_c_centroids) or len(self.chunked_c_labels)):
-            print("Data has not been fit!")
-            pass
+        assert (len(self.chunked_c_centroids) or len(self.chunked_c_labels)),"Data has not been fit!"
+
         chunk_labels = []
         for centroid, label in zip(self.chunked_c_centroids, self.chunked_c_labels):
             bs = image.size(0)
+            centroid = torch.Tensor(centroid).to(self.device)
+            label = torch.Tensor(label).to(self.device)
             feat = self._extract_feature(image)
             h = int(np.sqrt(feat.shape[1]))
             feat = feat.flatten(start_dim=0, end_dim=1).permute(0, 1).contiguous()
-            feat = feat.cpu()
-            image_labels = self._predict(feat, centroid, label)
-            image_labels = image_labels.view(bs, 1, h,h)
-            image_labels = F.interpolate(image_labels,
+            pred = self._predict(feat, centroid, label)
+            pred = pred.view(bs, self.k, h,h)
+            pred = F.interpolate(pred,
                                    size=[self.img_size, self.img_size],
                                    mode='nearest',
                                    recompute_scale_factor=False)
-            chunk_labels.append(image_labels)
+            chunk_labels.append(pred)
+        chunk_labels = torch.stack(chunk_labels).squeeze(1)
+        chunk_labels = chunk_labels.view(self.n_chunks*self.k, 1, self.img_size, self.img_size)
         return chunk_labels
 
-
     def _predict(self, feature, centroids, labels):
-        distance = np.zeros(shape=(centroids.shape[0], feature.shape[0]))
+        distance = torch.zeros(size=(centroids.shape[0], feature.shape[0])).to(self.device)
         for idx, cluster_centroid in enumerate(centroids):
-            distance[idx] = pairwise_distances(feature, cluster_centroid.reshape(1, -1), metric=self.affinity).ravel()
-        predict_label = np.argmin(distance.T, axis=1)
+            distance[idx] = torch.Tensor(pairwise_distances(np.array(feature.cpu()),
+                                               np.array(cluster_centroid.cpu()).reshape(1, -1),
+                                               metric='cosine')\
+                                               .ravel()).to(self.device)
+        predict_label = torch.topk(distance.T, self.k, largest=False, dim=1)[1]
 
-        return torch.Tensor(labels[predict_label])  
+        return labels[predict_label]
 
     @torch.no_grad()
     def fit(self, loader):

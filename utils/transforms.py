@@ -1,9 +1,9 @@
-from configparser import Interpolation
 import math
 import random
 
 import numpy as np
 import torch
+import torch.nn as nn
 from torchvision import transforms as T
 from torchvision.transforms import functional as F
 
@@ -196,3 +196,56 @@ class ToBinaryMask:
         target[contours] = 255
 
         return image, target
+
+
+class SmoothMask:
+    
+    def __init__(self):
+        self.pad = nn.ZeroPad2d(padding=1)
+    
+    def __call__(self, mask):
+        mask_pad = self.pad(mask.unsqueeze(1)).squeeze(1)
+
+        is_eq = {
+            "top"       : (mask == mask_pad[:, :-2, 1:-1]),
+            "bot"       : (mask == mask_pad[:, 2:, 1:-1]),
+            "left"      : (mask == mask_pad[:, 1:-1, :-2]),
+            "right"     : (mask == mask_pad[:, 1:-1, 2:]),
+            'top_left'  : (mask == mask_pad[:, :-2, :-2]),
+            'top_right' : (mask == mask_pad[:, :-2, 2:]),
+            'bot_left'  : (mask == mask_pad[:, 2:, :-2]),
+            'bot_right' : (mask == mask_pad[:, 2:, 2:])
+        }
+
+        is_eq = torch.stack(list(is_eq.values()), dim=-1)
+        has_same_neighbors = torch.any(is_eq, dim=-1)
+
+        # set every pixel label with no same neighbors to background
+        mask[~has_same_neighbors] = 0
+
+        return mask
+
+
+class PatchwiseSmoothMask(SmoothMask):
+
+    def __init__(self, patch_size):
+        super(PatchwiseSmoothMask, self).__init__()
+
+        self.patch_size = patch_size
+
+    def __call__(self, mask):
+        # downsample patches, i.e. replace patch by label
+        height, width = mask.size(1), mask.size(2)
+        patches_per_row, patches_per_col = height // self.patch_size, width // self.patch_size
+        idx_row = torch.arange(patches_per_row) * self.patch_size
+        idx_col = torch.arange(patches_per_col) * self.patch_size
+        mask = mask[:, :, idx_col]
+        mask = mask[:, idx_row]
+        
+        # smoothen & upsample
+        mask = super(PatchwiseSmoothMask, self).__call__(mask)
+        mask = mask.unsqueeze(1).float()
+        mask = nn.functional.interpolate(mask, size=[height, width], mode='nearest', recompute_scale_factor=False)
+        mask = mask.squeeze(1).byte()
+
+        return mask

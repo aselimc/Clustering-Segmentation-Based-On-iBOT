@@ -2,7 +2,6 @@ import argparse
 
 from torch.utils.data import DataLoader
 from torchvision import datasets
-from tqdm import tqdm
 
 from dataloader import PartialDatasetVOC
 import models
@@ -80,14 +79,14 @@ def parser_args():
     parser.add_argument('--distance', type=str, choices=['euclidean', 'cosine'], default='euclidean')  
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument("--percentage", type=float, default=1)
-    parser.add_argument("--label_percentage", type=float, default=1)
+    parser.add_argument("--label_percentage", type=float, default=0.1)
     parser.add_argument("--segmentation", type=str, choices=['binary', 'multi'], default='multi')
     parser.add_argument("--eval_freq", type=int, default=5)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument('--n_chunks', type=int, default=15)
     parser.add_argument('--purity', type=bool, default=False)
-    parser.add_argument('--n_clusters', type=int, default=80)
-    parser.add_argument('--fit_clusters', type=bool, default=False)
+    parser.add_argument('--n_clusters', type=int, default=150)
+    parser.add_argument('--fit_clusters', type=bool, default=True)
     parser.add_argument('--linkage', type=str, choices=['ward', 'average', 'single', 'maximum'], default='ward')
 
 
