@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -110,6 +111,19 @@ class _BaseSegmentator(nn.Module):
         mask = mask.byte()
 
         return mask
+    
+    def _balance_class(self, train_features, train_labels):
+        is_background = (train_labels == 0).all(dim=1)
+        idx_background = torch.nonzero(is_background, as_tuple=False).squeeze(1).numpy()
+        idx_foreground = torch.nonzero(~is_background, as_tuple=False).squeeze(1).numpy()
+        size_undersample = int(len(idx_background) * self.background_label_percentage)
+        idx_undersample = np.random.choice(size_undersample, size=size_undersample, replace=False)
+        idx_train = np.concatenate([idx_foreground, idx_undersample], axis=0)
+
+        train_features = train_features[idx_train]
+        train_labels = train_labels[idx_train]
+
+        return train_features, train_labels
 
     @property
     def embed_dim(self):

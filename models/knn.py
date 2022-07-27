@@ -74,18 +74,11 @@ class KNNSegmentator(_BaseSegmentator):
 
     @torch.no_grad()
     def fit(self, loader):
-        self.train_features, self.train_labels = self._transform_data(loader)
+        train_features, train_labels = self._transform_data(loader)
+        train_features, train_labels = self._balance_class(train_features, train_labels)
 
-        # class balancing
-        is_background = (self.train_labels == 0).all(dim=1)
-        idx_background = torch.nonzero(is_background, as_tuple=False).squeeze(1).numpy()
-        idx_foreground = torch.nonzero(~is_background, as_tuple=False).squeeze(1).numpy()
-        size_undersample = int(len(idx_background) * self.background_label_percentage)
-        idx_undersample = np.random.choice(size_undersample, size=size_undersample, replace=False)
-        idx_train = np.concatenate([idx_foreground, idx_undersample], axis=0)
-
-        self.train_features = self.train_features[idx_train].permute(1, 0)
-        self.train_labels = self.train_labels[idx_train].permute(1, 0)
+        self.train_features = train_features.permute(1, 0)
+        self.train_labels = train_labels.permute(1, 0)
 
     @torch.no_grad()
     def score(self, loader):
