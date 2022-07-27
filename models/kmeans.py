@@ -6,52 +6,35 @@ from torchvision.utils import make_grid
 from torchpq.clustering import KMeans
 from tqdm import tqdm
 
-from utils import extract_feature, mIoU
+from . import _BaseSegmentator
+from utils import mIoU
 from utils.transforms import PatchwiseSmoothMask
 
 
-class KMeansSegmentator(nn.Module):
+class KMeansSegmentator(_BaseSegmentator):
 
     def __init__(self, backbone, logger,
                  k=20,
-                 num_classes=21,
-                 feature='intermediate',
-                 patch_labeling='coarse',
-                 smooth_mask=True,
-                 n_blocks=1,
-                 use_cuda=True,
                  distance='euclidean',
+                 init_mode='kmeans++',
+                 n_redo=10,
+                 max_iter=300,
+                 tol=1e-4,
                  **kwargs):
-        super(KMeansSegmentator, self).__init__()
+        super(KMeansSegmentator, self).__init__(backbone, logger, **kwargs)
 
-        self.use_cuda = use_cuda
-        if use_cuda:
-            self.device = torch.device('cuda')
-        else:
-            self.device = torch.device('cpu')
-
-        self.backbone = backbone.to(device=self.device)
-        self.feature = feature
-        self.n_blocks = n_blocks
-        self.unfold = nn.Unfold(kernel_size=self.patch_size, stride=self.patch_size)
-
-        self.num_classes = num_classes
-        self.patch_labeling = patch_labeling
-
-        if smooth_mask:
-            self.smooth = PatchwiseSmoothMask(self.patch_size)
-        else:
-            self.smooth = nn.Identity()
-
-        self.kmeans = KMeans(n_clusters=k, distance=distance, **kwargs)
-
-        self.logger = logger
+        self.kmeans = KMeans(n_clusters=k,
+                             distance=distance,
+                             init_mode=init_mode,
+                             n_redo=n_redo,
+                             max_iter=max_iter,
+                             tol=tol)
 
     @torch.no_grad()
     def forward(self, image):
         bs = image.size(0)
-        feat = extract_feature(self.backbone, image, feature=self.feature, n_blocks=self.n_blocks)
-        feat = feat.flatten(start_dim=0, end_dim=1).permute(1, 0).contiguous()
+        feat = self._extract_feature(image)
+        feat = feat.permute(1, 0).contiguous()
         feat = feat.cpu()
 
         cluster_assignment = self.kmeans.predict(feat)
@@ -80,24 +63,16 @@ class KMeansSegmentator(nn.Module):
         progress_bar = tqdm(total=len(loader))
         for image, target in loader:
             image = image.to(device=self.device)
-            feat = extract_feature(self.backbone, image, feature=self.feature, n_blocks=self.n_blocks)
-            feat = feat.flatten(start_dim=0, end_dim=1).cpu()
+            feat = self._extract_feature(image)
+            feat = feat.cpu()
             train_features.append(feat)
 
-            # divide ground truth mask into patches
             target = target.to(device=self.device)
-            target = self.unfold(target.unsqueeze(1).float())
-            target = target.permute(0, 2, 1)
-            if self.patch_labeling == 'coarse':
-                target = target.long()
-                target = F.one_hot(target, self.num_classes)
-                target = torch.argmax(target.sum(dim=2), dim=2)
-                target = target.unsqueeze(2).expand(-1, self.num_patches, self.patch_size**2)
-            target = target.flatten(start_dim=0, end_dim=1)
-            target = target.byte().cpu()
+            target = self._mask_to_patches(target)
+            target = target.cpu()
             train_labels.append(target)
             progress_bar.update()
-        
+
         train_features = torch.cat(train_features, dim=0).permute(1, 0).contiguous()
         train_labels = torch.cat(train_labels, dim=0).long()
         train_labels = F.one_hot(train_labels, self.num_classes)
@@ -170,19 +145,3 @@ class KMeansSegmentator(nn.Module):
     @property
     def distance(self):
         return self.kmeans.distance
-
-    @property
-    def embed_dim(self):
-        return self.backbone.embed_dim
-
-    @property
-    def patch_size(self):
-        return self.backbone.patch_embed.patch_size
-
-    @property
-    def img_size(self):
-        return self.backbone.patch_embed.img_size
-
-    @property
-    def num_patches(self):
-        return int((self.img_size / self.patch_size)**2)

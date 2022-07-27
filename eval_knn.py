@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 from dataloader import PartialDatasetVOC
 import models
-from models import KNNSegmentator
+from models.knn import KNNSegmentator
 from utils.logger import WBLogger
 import utils.transforms as _transforms
 from utils import load_pretrained_weights

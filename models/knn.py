@@ -7,61 +7,33 @@ import torch.nn.functional as F
 from torchvision.utils import make_grid
 from tqdm import tqdm
 
+from . import _BaseSegmentator
 from utils import extract_feature, mIoU
-from utils.transforms import PatchwiseSmoothMask
 
 
-class KNNSegmentator(nn.Module):
+class KNNSegmentator(_BaseSegmentator):
 
     def __init__(self, backbone,
                  logger,
                  k=20,
-                 num_classes=21,
-                 feature='intermediate',
-                 patch_labeling='coarse',
-                 background_label_percentage=0.2,
-                 smooth_mask=True,
                  weighted_majority_vote=False,
-                 n_blocks=1,
                  temperature=1.0,
-                 use_cuda=True):
+                 **kwargs):
         """
         Args:
             feature: 'intermediate', 'query', 'key', 'value'
             patch_label: 'coarse', 'fine'
         """
-        super(KNNSegmentator, self).__init__()
-
-        self.backbone = backbone
-        self.n_blocks = n_blocks
-        self.unfold = nn.Unfold(kernel_size=self.patch_size, stride=self.patch_size)
-
-        self.logger = logger
+        super(KNNSegmentator, self).__init__(backbone, logger, **kwargs)
 
         self.k = k
-        self.num_classes = num_classes
-        self.feature = feature
-        self.patch_labeling = patch_labeling
-        self.background_label_percentage = background_label_percentage
         self.weighted_majority_vote = weighted_majority_vote
         self.temperature = temperature
-
-        if smooth_mask:
-            self.smooth = PatchwiseSmoothMask(self.patch_size)
-        else:
-            self.smooth = nn.Identity()
-
-        self.use_cuda = use_cuda
-        if use_cuda:
-            self.backbone.cuda()
-            self.device = torch.device('cuda')
-        else:
-            self.device = torch.device('cpu')
 
     @torch.no_grad()
     def forward(self, image):
         bs = image.size(0)
-        test_feature = extract_feature(self.backbone, image, feature=self.feature, n_blocks=self.n_blocks)
+        test_feature = self._extract_feature(image, flatten=False)
 
         # patchwise cosine similarity between test feature & all train features
         # (bs x num_patches x embed_dim) * (embed_dim x (num_patches * num_train))
@@ -107,22 +79,13 @@ class KNNSegmentator(nn.Module):
         progress_bar = tqdm(total=len(loader))
         for image, target in loader:
             image = image.to(device=self.device)
-            feat = extract_feature(self.backbone, image, feature=self.feature, n_blocks=self.n_blocks)
-            feat = feat.flatten(start_dim=0, end_dim=1)
+            feat = self._extract_feature(image)
             feat = feat.cpu()
             train_features.append(feat)
 
-            # divide ground truth mask into patches
-            target = self.unfold(target.unsqueeze(1).float())
-            if self.patch_labeling == 'coarse':
-                target = target.permute(0, 2, 1).long()
-                target = F.one_hot(target, self.num_classes)
-                target = torch.argmax(target.sum(dim=2), dim=2)
-                target = target.unsqueeze(2).expand(-1, self.num_patches, self.patch_size**2)
-            else:
-                target = target.permute(0, 2, 1)
-            target = target.flatten(start_dim=0, end_dim=1)
-            target = target.byte().cpu()
+            target = target.to(device=self.device)
+            target = self._mask_to_patches(target)
+            target = target.cpu()
             train_labels.append(target)
 
             progress_bar.update()
@@ -171,15 +134,3 @@ class KNNSegmentator(nn.Module):
             })
 
         return miou, iou_std
-
-    @property
-    def patch_size(self):
-        return self.backbone.patch_embed.patch_size
-
-    @property
-    def img_size(self):
-        return self.backbone.patch_embed.img_size
-
-    @property
-    def num_patches(self):
-        return int((self.img_size / self.patch_size)**2)
