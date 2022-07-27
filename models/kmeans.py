@@ -85,36 +85,6 @@ class KMeansSegmentator(_BaseSegmentator):
 
         self.cluster_labels = torch.stack(self.cluster_labels, dim=1).unsqueeze(0).unsqueeze(0)
 
-    @torch.no_grad()
-    def score(self, loader):
-        top1 = []
-        
-        print("Compute score...")
-        progress_bar = tqdm(total=len(loader))
-        for idx, (image, target) in enumerate(loader):
-            image = image.to(device=self.device)
-            target = target.to(device=self.device)
-
-            pred = self.forward(image)
-            bs = pred.size(0)
-            for i in range(bs):
-                top1.append(mIoU(pred[i], target[i]))
-
-            if idx % self.logger.config['eval_freq'] == 0 or idx == len(loader):
-                self.logger.log_segmentation(image[0], pred[0], target[0], step=idx, logit=False)
-            progress_bar.update()
-
-        top1 = torch.stack(top1, dim=0)
-        miou = torch.mean(top1).item()
-        iou_std = torch.std(top1).item()
-
-        self.logger.log_scalar_summary({
-                "mIoU": miou,
-                "IoU std": iou_std,
-            })
-
-        return miou, iou_std
-
     def _similarity(self, x, y, inplace=False, normalize=True):
         return self.kmeans.sim(x, y, inplace, normalize)
 

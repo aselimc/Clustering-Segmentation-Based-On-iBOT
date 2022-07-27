@@ -84,29 +84,7 @@ class KNNSegmentator(_BaseSegmentator):
     def score(self, loader):
         self.train_features = self.train_features.to(device=self.device)
         self.train_labels = self.train_labels.to(device=self.device)
-        top1 = []
-
-        progress_bar = tqdm(total=len(loader))
-        for idx, (image, target) in enumerate(loader):
-            image = image.to(device=self.device)
-            target = target.to(device=self.device)
-
-            pred = self.forward(image)
-            bs = pred.size(0)
-            for i in range(bs):
-                top1.append(mIoU(pred[i], target[i]))
-
-            if idx % self.logger.config['eval_freq'] == 0 or idx == len(loader):
-                self.logger.log_segmentation(image[0], pred[0], target[0], step=idx, logit=False)
-            progress_bar.update()
-
-        top1 = torch.stack(top1)
-        miou = torch.mean(top1).item()
-        iou_std = torch.std(top1).item()
-
-        self.logger.log_scalar_summary({
-                "mIoU": miou,
-                "IoU std": iou_std,
-            })
+        
+        miou, iou_std = super(KNNSegmentator, self).score(loader)
 
         return miou, iou_std
