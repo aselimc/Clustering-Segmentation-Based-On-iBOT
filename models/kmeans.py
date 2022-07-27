@@ -47,7 +47,7 @@ class KMeansSegmentator(nn.Module):
         elif percentage == 0.5:
             self.maximum_count_per_class = 30000
 
-        self.kmeans = KMeans(n_clusters=k, distance=distance, **kwargs)
+        self.kmeans = KMeans(n_clusters=k, distance=distance, verbose=5,**kwargs)
 
         self.logger = logger
 
