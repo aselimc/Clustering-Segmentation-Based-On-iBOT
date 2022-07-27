@@ -8,9 +8,7 @@ from torchvision.utils import make_grid
 from tqdm import tqdm
 
 from . import _BaseSegmentator
-from utils.metrics import mIoU
 from utils.scheduler import WarmStartCosineAnnealingLR
-from utils.transforms import SmoothMask
 
 
 class LinearSegmentator(_BaseSegmentator):
