@@ -49,7 +49,7 @@ class AgglomerativeClustering(nn.Module):
         self.affinity = affinity
         self.linkage = linkage
         self.percentage = percentage
-        self.maximum_count_per_class = 200
+        self.maximum_count_per_class = 1000
         self.chunked_c_centroids : List
         self.chunked_c_labels: List
         self.global_step =0
@@ -81,7 +81,6 @@ class AgglomerativeClustering(nn.Module):
                 self.logger.log_segmentation(images[0], pred[0], seg[0], step=idx, logit=False)
                 self.logger.log_segmentation(images[2], pred[2], seg[2], step=idx+1, logit=False)
 
-            progress_bar.update()
 
             self.global_step += 1
             progress_bar.update()
@@ -251,8 +250,8 @@ class AgglomerativeClustering(nn.Module):
         np.save(f'c_label_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}.npy', np.array(self.chunked_c_labels))
 
     def load_cluster_centroids(self):
-        self.chunked_c_centroids = list(np.load(f'c_centroid_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}.npy'))
-        self.chunked_c_labels = list(np.load(f'c_label_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}.npy'))
+        self.chunked_c_centroids = list(np.load(f'c_centroid_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}_{self.maximum_count_per_class}.npy'))
+        self.chunked_c_labels = list(np.load(f'c_label_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}_{self.maximum_count_per_class}.npy'))
 
     @property
     def patch_size(self):
