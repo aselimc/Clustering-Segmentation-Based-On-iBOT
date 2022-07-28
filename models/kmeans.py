@@ -42,6 +42,16 @@ class KMeansSegmentator(_BaseSegmentator):
         self.arch = arch
         self.extract_vit_features = False # change this
 
+        print("percentage", percentage)
+        if percentage == 0.01:
+            self.maximum_count_per_class = 100
+        elif percentage == 0.1:
+            self.maximum_count_per_class = 1500
+        elif percentage == 0.3:
+            self.maximum_count_per_class = 5000
+        elif percentage == 0.5:
+            self.maximum_count_per_class = 30000
+
     @torch.no_grad()
     def forward(self, image):
         bs = image.size(0)
