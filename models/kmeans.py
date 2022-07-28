@@ -50,7 +50,7 @@ class KMeansSegmentator(_BaseSegmentator):
         elif percentage == 0.3:
             self.maximum_count_per_class = 5000
         elif percentage == 0.5:
-            self.maximum_count_per_class = 40000
+            self.maximum_count_per_class = 50000
 
     @torch.no_grad()
     def forward(self, image):
