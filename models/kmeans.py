@@ -88,6 +88,8 @@ class KMeansSegmentator(_BaseSegmentator):
         else:
             print("\nUsing previously fitted clusters")
             loaded_centroids = torch.load('cluster_centroids.pt')
+            self.kmeans.n_redo = 1
+            self.kmeans.max_iter = 1
             self.kmeans.fit(train_features, loaded_centroids)
 
         # dataset balancing prior cluster labeling
