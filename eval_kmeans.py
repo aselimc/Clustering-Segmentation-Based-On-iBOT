@@ -42,6 +42,7 @@ def main(args):
                     percentage=args.percentage,
                     background_label_percentage=args.background_label_percentage,
                     fit_clusters=args.fit_clusters,
+                    extract_vit_features = args.extract_vit_features,
                     arch = args.arch)
 
     ## TRAINING DATASET ##
@@ -90,6 +91,7 @@ def parser_args():
     parser.add_argument("--eval_freq", type=int, default=5)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--fit_clusters", type=bool, default=True)
+    parser.add_argument("--extract_vit_features", type=bool, default=True)
 
     return parser.parse_args()
 

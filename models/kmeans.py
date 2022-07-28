@@ -24,6 +24,7 @@ class KMeansSegmentator(_BaseSegmentator):
                  weighted_majority_vote=False,
                  fit_clusters=True,
                  arch = "vit_large",
+                 extract_vit_features = True
                  **kwargs):
         super(KMeansSegmentator, self).__init__(backbone, logger, **kwargs)
 
@@ -38,6 +39,7 @@ class KMeansSegmentator(_BaseSegmentator):
         self.weighted_majority_vote = weighted_majority_vote
         self.fit_clusters = fit_clusters
         self.arch = arch
+        self.extract_vit_features = extract_vit_features
 
     @torch.no_grad()
     def forward(self, image):
@@ -64,10 +66,18 @@ class KMeansSegmentator(_BaseSegmentator):
 
     @torch.no_grad()
     def fit(self, loader):
-        train_features, train_labels = self._transform_data(loader)
-        #train_features = train_features.permute(1, 0).contiguous()
+        if self.extract_vit_features:
+            train_features, train_labels = self._transform_data(loader)
+            torch.save(train_features, "train_features.pt")
+            torch.save(train_labels, "train_labels.pt")
+        else:
+            print("\nUsing previously extracted features")
+            train_features = torch.load("train_features.pt")
+            train_labels = torch.load("train_labels.pt")
+        
+        train_features = train_features.permute(1, 0).contiguous()
         train_labels = train_labels.long()
-        #train_labels = F.one_hot(train_labels, self.num_classes) do not forget!!
+        
 
         # fit clusters, i.e. get centroids (embed_dim, k)
         if self.fit_clusters:
@@ -75,6 +85,7 @@ class KMeansSegmentator(_BaseSegmentator):
             self.kmeans.fit(train_features)
             torch.save(self.centroids, 'cluster_centroids.pt')
         else:
+            print("\nUsing previously fitted clusters")
             loaded_centroids = torch.load('cluster_centroids.pt')
             self.kmeans.fit(train_features, loaded_centroids)
 
