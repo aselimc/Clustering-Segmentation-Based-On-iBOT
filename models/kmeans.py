@@ -125,8 +125,8 @@ class KMeansSegmentator(_BaseSegmentator):
             train_features = train_features.permute(1, 0).contiguous()
         
         if self.percentage == 1.0:
-            a = F.one_hot(train_labels[0:train_labels.size(0)/2], self.num_classes)
-            b = F.one_hot(train_labels[train_labels.size(0)/2:train_labels.size(0)], self.num_classes)
+            a = F.one_hot(train_labels[0:int(train_labels.size(0)/2)], self.num_classes)
+            b = F.one_hot(train_labels[int(train_labels.size(0)/2):int(train_labels.size(0))], self.num_classes)
             train_labels = torch.cat((a,b), dim=0)
         else:    
             train_labels = F.one_hot(train_labels, self.num_classes)
