@@ -33,7 +33,7 @@ def main(args):
                     feature=args.feature,
                     smooth_mask=args.smooth_mask,
                     n_blocks=args.n_blocks,
-                    use_cuda=True,
+                    use_cuda=True, 
                     distance=args.distance,
                     init_mode=args.init,
                     n_redo=args.n_init,
@@ -90,8 +90,8 @@ def parser_args():
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--eval_freq", type=int, default=5)
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument("--fit_clusters", type=bool, default=True)
-    parser.add_argument("--extract_vit_features", type=bool, default=False)
+    parser.add_argument("--fit_clusters", type=bool)
+    parser.add_argument("--extract_vit_features", type=bool)
 
     return parser.parse_args()
 
