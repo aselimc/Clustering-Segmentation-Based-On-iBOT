@@ -100,6 +100,7 @@ class KMeansSegmentator(_BaseSegmentator):
             self.kmeans.n_redo = 1
             self.kmeans.max_iter = 50
             self.kmeans.fit(train_features, loaded_centroids)
+            torch.save(self.centroids, 'cluster_centroids.pt')
 
         # dataset balancing prior cluster labeling
         if self.percentage < 1.:
