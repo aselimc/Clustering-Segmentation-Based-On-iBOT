@@ -18,4 +18,31 @@ Make sure to download the <a href="http://host.robots.ox.ac.uk/pascal/VOC/voc201
 <ul>
   <li> ViT-Base: <a href=https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/archive/2022/ibot/vitb_16_pt22k/checkpoint.pth> full cpkt </a>
   <li> ViT-Large: <a href="https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/archive/2022/ibot/vitl_16_pt22k/checkpoint.pth"> full cpkt </a>
-<ul>
+</ul>
+
+## Evaluation
+Each method can be evaluated by running its respective script
+```sh
+python eval_linear.py
+python eval_knn.py
+python eval_kmeans.py
+python eval_agglomerative.py.py
+```
+together with the specified settings. For further details, please either run the script
+with a `--help` flag or refer to our provided example 
+<a href="https://github.com/aselimc/iBot-cv/tree/main/example">bash scripts</a>.
+
+## Segmentation
+<style>
+img {
+  display: inline-block;
+}
+</style>
+<img src=".github\segmentation\bus.png">
+<img src=".github\segmentation\motorbike.png">
+<img src=".github\segmentation\plane.png">
+<img src=".github\segmentation\train.png">
+<img src=".github\segmentation\kid.png">
+<img src=".github\segmentation\women.png">
+<img src=".github\segmentation\dog.png">
+<img src=".github\segmentation\cat.png">
