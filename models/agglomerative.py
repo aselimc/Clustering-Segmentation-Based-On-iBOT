@@ -21,16 +21,15 @@ class AgglomerativeClustering(nn.Module):
                 feature='intermediate',
                 n_blocks=1,
                 use_cuda=True,
-                distance="euclidean",
                 calculate_purity=False,
-                temperature=1.0,
                 patch_labeling='coarse',
                 n_classes=21,
                 affinity='euclidean',
                 linkage='ward',
                 percentage=1.0,
                 smooth_mask=True,
-                k=1,  
+                k=1,
+                fit_only_labelled=False,  
         ):
         super(AgglomerativeClustering, self).__init__()
         self.device = torch.device('cuda') if use_cuda else torch.device('cpu')
@@ -41,9 +40,7 @@ class AgglomerativeClustering(nn.Module):
         self.num_classes = n_classes
         self.logger = logger
         self.patch_labeling = patch_labeling
-        self.temperature = temperature
         self.calculate_purity = calculate_purity
-        self.distance = distance
         self.unfold = nn.Unfold(kernel_size=self.patch_size, stride=self.patch_size)
         self.n_clusters = n_clusters
         self.affinity = affinity
@@ -55,7 +52,7 @@ class AgglomerativeClustering(nn.Module):
         self.global_step =0
         self.smooth = PatchwiseSmoothMask(self.patch_size) if smooth_mask else nn.Identity()
         self.k = k
-
+        self.fit_only_labelled = fit_only_labelled
 
     @torch.no_grad()
     def score(self, loader):
@@ -178,14 +175,21 @@ class AgglomerativeClustering(nn.Module):
         self.save_cluster_centroids()
 
     def fit_chunks(self, feature, label):
-        if self.percentage < 1.0:
+        if self.percentage ==0.5:
+            ldi = np.arange(len(label)//2)
+
+        elif self.percentage < 1.0:
             label = torch.max(label, dim=1).values
             ldi, label = self._label_equal(label)
+            
         else:
             ldi = np.arange(len(label))
         model = cluster.AgglomerativeClustering(n_clusters=self.n_clusters, affinity=self.affinity,
                                       compute_full_tree=False, linkage=self.linkage, compute_distances=True)
-        model = model.fit(feature)
+        if self.fit_only_labelled:
+            model = model.fit(feature[ldi])
+        else:
+            model = model.fit(feature)
         cluster_data_labels = self._label_cluster(model, label, ldi)
         cluster_centroids = self._get_cluster_centroids(model, feature)
         del model
@@ -246,12 +250,12 @@ class AgglomerativeClustering(nn.Module):
         return feat
 
     def save_cluster_centroids(self):
-        np.save(f'c_centroid_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}.npy', np.array(self.chunked_c_centroids))
-        np.save(f'c_label_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}.npy', np.array(self.chunked_c_labels))
+        np.save(f'c_centroid_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}_{self.maximum_count_per_class}_{self.n_clusters}.npy', np.array(self.chunked_c_centroids))
+        np.save(f'c_label_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}_{self.maximum_count_per_class}_{self.n_clusters}.npy', np.array(self.chunked_c_labels))
 
     def load_cluster_centroids(self):
-        self.chunked_c_centroids = list(np.load(f'c_centroid_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}_{self.maximum_count_per_class}.npy'))
-        self.chunked_c_labels = list(np.load(f'c_label_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}_{self.maximum_count_per_class}.npy'))
+        self.chunked_c_centroids = list(np.load(f'c_centroid_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}_{self.maximum_count_per_class}_{self.n_clusters}.npy'))
+        self.chunked_c_labels = list(np.load(f'c_label_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}_{self.maximum_count_per_class}_{self.n_clusters}.npy'))
 
     @property
     def patch_size(self):
