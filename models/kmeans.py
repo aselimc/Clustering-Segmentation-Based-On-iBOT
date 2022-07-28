@@ -38,9 +38,9 @@ class KMeansSegmentator(_BaseSegmentator):
         
         self.percentage = percentage
         self.weighted_majority_vote = weighted_majority_vote
-        self.fit_clusters = fit_clusters
+        self.fit_clusters = False # change this
         self.arch = arch
-        self.extract_vit_features = False #change this
+        self.extract_vit_features = False # change this
 
     @torch.no_grad()
     def forward(self, image):
