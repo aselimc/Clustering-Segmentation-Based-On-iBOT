@@ -77,7 +77,6 @@ class KMeansSegmentator(_BaseSegmentator):
 
     @torch.no_grad()
     def fit(self, loader):
-        print("extractvitfeatures", self.extract_vit_features)
         if self.extract_vit_features:
             train_features, train_labels = self._transform_data(loader)
             torch.save(train_features, "train_features.pt")
@@ -96,7 +95,7 @@ class KMeansSegmentator(_BaseSegmentator):
             self.kmeans.fit(train_features)
             torch.save(self.centroids, 'cluster_centroids.pt')
         else:
-            print("\nUsing previously fitted clusters")
+            print("\nUsing previously fitted clusters(cluster_centroids.pt")
             loaded_centroids = torch.load('cluster_centroids.pt')
             self.kmeans.n_redo = 1
             self.kmeans.max_iter = 1
@@ -110,8 +109,9 @@ class KMeansSegmentator(_BaseSegmentator):
             balanced_train_features = []
             balanced_train_labels = []
 
+            train_features = train_features.permute(0, 1).contiguous()
             for i in range(len(ldi)):
-                balanced_train_features.append(train_features.permute(0, 1).contiguous())
+                balanced_train_features.append(train_features[ldi[i]])
                 balanced_train_labels.append(train_labels[ldi[i]])
             
             balanced_train_features = torch.cat(balanced_train_features, dim=0)
