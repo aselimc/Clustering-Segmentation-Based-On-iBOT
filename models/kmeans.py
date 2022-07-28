@@ -50,7 +50,7 @@ class KMeansSegmentator(_BaseSegmentator):
         elif percentage == 0.3:
             self.maximum_count_per_class = 5000
         elif percentage == 0.5:
-            self.maximum_count_per_class = 30000
+            self.maximum_count_per_class = 25000
 
     @torch.no_grad()
     def forward(self, image):
@@ -125,11 +125,6 @@ class KMeansSegmentator(_BaseSegmentator):
             train_features = train_features.permute(1, 0).contiguous()
         
         train_labels = F.one_hot(train_labels, self.num_classes)
-
-        # allow only percentage of labels (simulating dataset with small number of labels)
-        """num_samples = int(train_features.size(1) * self.percentage)
-        train_features = train_features[:, :num_samples]
-        train_labels = train_labels[:num_samples]"""
 
         # label clusters
         print("Assigning cluster labels...")
