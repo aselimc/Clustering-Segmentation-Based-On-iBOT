@@ -37,7 +37,8 @@ def main(args):
                     init_mode=args.init,
                     n_redo=args.n_init,
                     max_iter=args.max_iter,
-                    tol=args.tol)
+                    tol=args.tol,
+                    percentage=args.percentage)
 
     ## TRAINING DATASET ##
     transform = _transforms.Compose([
@@ -49,7 +50,7 @@ def main(args):
           + [_transforms.MergeContours()]
     )
 
-    train_dataset = PartialDatasetVOC(percentage = args.percentage, root=args.root, image_set='train', download=False, transforms=transform)
+    train_dataset = PartialDatasetVOC(percentage=0.01, root=args.root, image_set='train', download=False, transforms=transform)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.workers)
     val_dataset = datasets.VOCSegmentation(root=args.root, image_set='val', download=False, transforms=transform)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size)

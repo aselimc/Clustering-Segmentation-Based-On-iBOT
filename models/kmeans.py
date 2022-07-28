@@ -20,6 +20,8 @@ class KMeansSegmentator(_BaseSegmentator):
                  n_redo=10,
                  max_iter=300,
                  tol=1e-4,
+                 percentage=1.0,
+                 weighted_majority_vote=False,
                  **kwargs):
         super(KMeansSegmentator, self).__init__(backbone, logger, **kwargs)
 
@@ -29,6 +31,9 @@ class KMeansSegmentator(_BaseSegmentator):
                              n_redo=n_redo,
                              max_iter=max_iter,
                              tol=tol)
+        
+        self.percentage = percentage
+        self.weighted_majority_vote = weighted_majority_vote
 
     @torch.no_grad()
     def forward(self, image):
@@ -64,6 +69,11 @@ class KMeansSegmentator(_BaseSegmentator):
         print("\nFitting clusters...")
         self.kmeans.fit(train_features)
 
+        # allow only percentage of labels (simulating dataset with small number of labels)
+        num_samples = int(train_features.size(1) * self.percentage)
+        train_features = train_features[:, :num_samples]
+        train_labels = train_labels[:num_samples]
+
         # label clusters
         print("Assigning cluster labels...")
         self.cluster_labels = []
@@ -73,14 +83,24 @@ class KMeansSegmentator(_BaseSegmentator):
 
         similarities = self._similarity(train_features, self.centroids.to(device=self.device))
         for idx in range(self.k):
-            # weighted majority vote accross patches, higher similarity -> higher weight
-            assigned_similarities = similarities[cluster_assignment == idx, idx]
-            weights = torch.softmax(assigned_similarities, dim=0)
-            weights = weights * 0.0 + 1.0
-
             assigned_train_labels = train_labels[cluster_assignment == idx]
-            vote = torch.sum(weights[:, None, None] * assigned_train_labels, dim=0)
-            label = torch.argmax(vote, dim=1)
+
+            # assign background to clusters with no labeled data
+            if assigned_train_labels.size(0) == 0:
+                label = torch.zeros(self.patch_size**2).to(device=self.device)
+            else:
+                if self.weighted_majority_vote:
+                    # higher similarity -> higher weight
+                    assigned_similarities = similarities[cluster_assignment == idx, idx]
+                    weights = torch.softmax(assigned_similarities, dim=0)
+                    weights = weights.unsqueeze(1).unsqueeze(2)
+                else:
+                    weights = 1.0
+
+                assigned_train_labels = train_labels[cluster_assignment == idx]
+                vote = torch.sum(weights * assigned_train_labels, dim=0)
+                label = torch.argmax(vote, dim=1)
+            
             self.cluster_labels.append(label)
 
         self.cluster_labels = torch.stack(self.cluster_labels, dim=1).unsqueeze(0).unsqueeze(0)
