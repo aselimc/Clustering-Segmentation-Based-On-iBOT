@@ -46,7 +46,7 @@ class KMeansSegmentator(_BaseSegmentator):
         if percentage == 0.01:
             self.maximum_count_per_class = 100
         elif percentage == 0.1:
-            self.maximum_count_per_class = 1500
+            self.maximum_count_per_class = 1250
         elif percentage == 0.3:
             self.maximum_count_per_class = 5000
         elif percentage == 0.5:
@@ -97,7 +97,7 @@ class KMeansSegmentator(_BaseSegmentator):
         else:
             print("\nUsing previously fitted clusters(cluster_centroids.pt")
             loaded_centroids = torch.load('cluster_centroids.pt')
-            self.kmeans.n_redo = 1
+            self.kmeans.n_redo = 50
             self.kmeans.max_iter = 1
             self.kmeans.fit(train_features, loaded_centroids)
 
@@ -109,7 +109,6 @@ class KMeansSegmentator(_BaseSegmentator):
             balanced_train_features = []
             balanced_train_labels = []
             train_features = train_features.reshape(-1, 1024 if self.arch =="vit_large" else 768)
-            print("sizes feat & labels", train_features.size(), train_labels.size())
             for i in range(len(ldi)):
                 balanced_train_features.append(train_features[ldi[i]])
                 balanced_train_labels.append(train_labels[ldi[i]])
