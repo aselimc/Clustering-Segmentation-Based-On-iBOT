@@ -91,7 +91,7 @@ def parser_args():
     parser.add_argument("--eval_freq", type=int, default=5)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--fit_clusters", type=bool, default=True)
-    parser.add_argument("--extract_vit_features", type=bool, default=True)
+    parser.add_argument("--extract_vit_features", type=bool, default=False)
 
     return parser.parse_args()
 

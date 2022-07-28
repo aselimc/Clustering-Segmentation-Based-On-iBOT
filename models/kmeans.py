@@ -15,7 +15,7 @@ class KMeansSegmentator(_BaseSegmentator):
 
     def __init__(self, backbone, logger,
                  k=20,
-                 distance='euclidean',
+                 distance='cosine',
                  init_mode='kmeans++',
                  n_redo=10,
                  max_iter=300,
@@ -24,7 +24,7 @@ class KMeansSegmentator(_BaseSegmentator):
                  weighted_majority_vote=False,
                  fit_clusters=True,
                  arch = "vit_large",
-                 extract_vit_features = True,
+                 extract_vit_features = False,
                  **kwargs):
         super(KMeansSegmentator, self).__init__(backbone, logger, **kwargs)
 
