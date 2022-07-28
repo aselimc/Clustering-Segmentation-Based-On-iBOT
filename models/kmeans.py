@@ -108,7 +108,7 @@ class KMeansSegmentator(_BaseSegmentator):
 
             balanced_train_features = []
             balanced_train_labels = []
-            train_features = train_features.permute(0, 1).contiguous()
+            train_features = train_features.reshape(-1, 1024 if self.arch =="vit_large" else 768)
             print("sizes feat & labels", train_features.size(), train_labels.size())
             for i in range(len(ldi)):
                 balanced_train_features.append(train_features[ldi[i]])
