@@ -138,15 +138,18 @@ KNN
   </tr>
   <tr>
     <td>ViT-Large</td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
+    <td>0.511</td>
+    <td>0.580</td>
+    <td>0.601</td>
+    <td>0.451</td>
+    <td>0.544</td>
+    <td>0.575</td>
+    <td>0.454</td>
+    <td>0.540</td>
+    <td>0.559</td>
+    <td>0.477</td>
+    <td>0.551</td>
+    <td>0.574</td>
   </tr>
 </table>
 
@@ -185,9 +188,15 @@ KMeans
     <td></td>
     <td></td>
     <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
   </tr>
   <tr>
     <td>ViT-Large</td>
+    <td></td>
+    <td></td>
+    <td></td>
     <td></td>
     <td></td>
     <td></td>
@@ -235,9 +244,15 @@ Agglomerative Clustering
     <td></td>
     <td></td>
     <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
   </tr>
   <tr>
     <td>ViT-Large</td>
+    <td></td>
+    <td></td>
+    <td></td>
     <td></td>
     <td></td>
     <td></td>
