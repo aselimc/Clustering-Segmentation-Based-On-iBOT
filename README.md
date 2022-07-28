@@ -65,12 +65,15 @@ Linear Probing
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
+    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
+    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
+    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
@@ -127,12 +130,15 @@ KNN
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
+    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
+    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
+    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
@@ -189,12 +195,15 @@ KMeans
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
+    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
+    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
+    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
@@ -254,12 +263,15 @@ Agglomerative Clustering
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
+    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
+    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
+    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
