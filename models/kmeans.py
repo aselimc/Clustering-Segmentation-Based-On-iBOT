@@ -24,7 +24,7 @@ class KMeansSegmentator(_BaseSegmentator):
                  weighted_majority_vote=False,
                  fit_clusters=True,
                  arch = "vit_large",
-                 extract_vit_features = True
+                 extract_vit_features = True,
                  **kwargs):
         super(KMeansSegmentator, self).__init__(backbone, logger, **kwargs)
 
@@ -78,7 +78,6 @@ class KMeansSegmentator(_BaseSegmentator):
         train_features = train_features.permute(1, 0).contiguous()
         train_labels = train_labels.long()
         
-
         # fit clusters, i.e. get centroids (embed_dim, k)
         if self.fit_clusters:
             print("\nFitting clusters...")
