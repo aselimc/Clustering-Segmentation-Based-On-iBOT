@@ -6,61 +6,44 @@ from torchvision.utils import make_grid
 from torchpq.clustering import KMeans
 from tqdm import tqdm
 
+from . import _BaseSegmentator
 from utils import mIoU
 from utils.transforms import PatchwiseSmoothMask
 
-class KMeansSegmentator(nn.Module):
+
+class KMeansSegmentator(_BaseSegmentator):
 
     def __init__(self, backbone, logger,
                  k=20,
-                 num_classes=21,
-                 feature='intermediate',
-                 patch_labeling='coarse',
-                 n_blocks=1,
-                 smooth_mask=True,
-                 use_cuda=True,
                  distance='euclidean',
-                 percentage=0.1,
+                 init_mode='kmeans++',
+                 n_redo=10,
+                 max_iter=300,
+                 tol=1e-4,
+                 percentage=1.0,
+                 weighted_majority_vote=False,
+                 fit_clusters=True,
+                 arch = "vit_large",
                  **kwargs):
-        super(KMeansSegmentator, self).__init__()
+        super(KMeansSegmentator, self).__init__(backbone, logger, **kwargs)
 
-        self.use_cuda = use_cuda
-        if use_cuda:
-            self.device = torch.device('cuda')
-        else:
-            self.device = torch.device('cpu')
-
-        self.backbone = backbone.to(device=self.device)
-        self.feature = feature
-        self.n_blocks = n_blocks
-        self.unfold = nn.Unfold(kernel_size=self.patch_size, stride=self.patch_size)
-
-        self.num_classes = num_classes
-        self.patch_labeling = patch_labeling
-
-        if smooth_mask:
-            self.smooth = PatchwiseSmoothMask(self.patch_size)
-        else:
-            self.smooth = nn.Identity()
-
+        """self.kmeans = KMeans(n_clusters=k,
+                             distance=distance,
+                             init_mode=init_mode,
+                             n_redo=n_redo,
+                             max_iter=max_iter,
+                             tol=tol)"""
+        
         self.percentage = percentage
-        if percentage == 0.01:
-            self.maximum_count_per_class = 100
-        elif percentage == 0.1:
-            self.maximum_count_per_class = 1500
-        elif percentage == 0.3:
-            self.maximum_count_per_class = 5000
-        elif percentage == 0.5:
-            self.maximum_count_per_class = 30000
+        self.weighted_majority_vote = weighted_majority_vote
+        self.fit_clusters = fit_clusters
+        self.arch = arch
 
-        self.kmeans = KMeans(n_clusters=k, distance=distance, verbose=5,**kwargs)
-
-        self.logger = logger
-
+    @torch.no_grad()
     def forward(self, image):
         bs = image.size(0)
         feat = self._extract_feature(image)
-        feat = feat.flatten(start_dim=0, end_dim=1).permute(1, 0).contiguous()
+        feat = feat.permute(1, 0).contiguous()
         feat = feat.cpu()
 
         cluster_assignment = self.kmeans.predict(feat)
@@ -81,123 +64,78 @@ class KMeansSegmentator(nn.Module):
 
     @torch.no_grad()
     def fit(self, loader):
-        train_features = []
-        train_labels = []
-        self.cluster_labels = []
+        train_features, train_labels = self._transform_data(loader)
+        #train_features = train_features.permute(1, 0).contiguous()
+        train_labels = train_labels.long()
+        #train_labels = F.one_hot(train_labels, self.num_classes) do not forget!!
 
-        print("Extracting ViT features...")
-        progress_bar = tqdm(total=len(loader))
-        for image, target in loader:
-            image = image.to(device=self.device)
-            feat = self._extract_feature(image)
-            feat = feat.flatten(start_dim=0, end_dim=1).cpu()
-            train_features.append(feat)
+        # fit clusters, i.e. get centroids (embed_dim, k)
+        if self.fit_clusters:
+            print("\nFitting clusters...")
+            self.kmeans.fit(train_features)
+            torch.save(self.centroids, 'cluster_centroids.pt')
+        else:
+            loaded_centroids = torch.load('cluster_centroids.pt')
+            self.kmeans.fit(train_features, loaded_centroids)
 
-            # divide ground truth mask into patches
-            target = target.to(device=self.device)
-            target = self.unfold(target.unsqueeze(1).float())
-            target = target.permute(0, 2, 1)
-            if self.patch_labeling == 'coarse':
-                target = target.long()
-                target = F.one_hot(target, self.num_classes)
-                target = torch.argmax(target.sum(dim=2), dim=2)
-                target = target.unsqueeze(2).expand(-1, self.num_patches, self.patch_size**2)
-            target = target.flatten(start_dim=0, end_dim=1)
-            target = target.byte().cpu()
-            train_labels.append(target)
-            progress_bar.update()
-        
-        #train_features = torch.cat(train_features, dim=0).permute(1, 0).contiguous()
-        train_features = torch.cat(train_features, dim=0)
-        train_labels = torch.cat(train_labels, dim=0).long()
-
+        # dataset balancing prior cluster labeling
         if self.percentage < 1.:
             lab = torch.max(train_labels, dim=1).values
             ldi, label = self._label_equal(lab)
-            
-            actual_train_labels = []
-            actual_train_features = []
-            for i in range(len(ldi)):
-                actual_train_labels.append(train_labels[ldi[i]])
-                actual_train_features.append(train_features[ldi[i]])
 
-            actual_train_labels = torch.cat(actual_train_labels, dim=0).long()
-            actual_train_features = torch.cat(actual_train_features, dim=0)
-            train_labels = actual_train_labels.reshape(-1, 256)
-            train_features = actual_train_features.reshape(-1, feat.size(1))
+            balanced_train_features = []
+            balanced_train_labels = []
+
+            for i in range(len(ldi)):
+                balanced_train_features.append(train_features.permute(0, 1).contiguous())
+                balanced_train_labels.append(train_labels[ldi[i]])
+            
+            balanced_train_features = torch.cat(balanced_train_features, dim=0)
+            balanced_train_labels = torch.cat(balanced_train_labels, dim=0)
+
+            train_labels = balanced_train_labels.reshape(-1, 256)
+            train_features = balanced_train_features.reshape(-1, 1024 if self.arch =="vit_large" else 768) 
             train_features = train_features.permute(1, 0).contiguous()
         else:
             train_features = train_features.permute(1, 0).contiguous()
-
+        
         train_labels = F.one_hot(train_labels, self.num_classes)
 
-        # fit clusters, i.e. get centroids (embed_dim, k)
-        print("\nFitting clusters...")
-        self.kmeans.fit(train_features)
+        # allow only percentage of labels (simulating dataset with small number of labels)
+        """num_samples = int(train_features.size(1) * self.percentage)
+        train_features = train_features[:, :num_samples]
+        train_labels = train_labels[:num_samples]"""
 
         # label clusters
         print("Assigning cluster labels...")
+        self.cluster_labels = []
         cluster_assignment = self.kmeans.predict(train_features)
         train_features = train_features.to(device=self.device)
         train_labels = train_labels.to(device=self.device)
 
         similarities = self._similarity(train_features, self.centroids.to(device=self.device))
         for idx in range(self.k):
-            # weighted majority vote accross patches, higher similarity -> higher weight
-            assigned_similarities = similarities[cluster_assignment == idx, idx]
-            weights = torch.softmax(assigned_similarities, dim=0)
-            weights = weights * 0.0 + 1.0
-
             assigned_train_labels = train_labels[cluster_assignment == idx]
-            vote = torch.sum(weights[:, None, None] * assigned_train_labels, dim=0)
-            label = torch.argmax(vote, dim=1)
+
+            # assign background to clusters with no labeled data
+            if assigned_train_labels.size(0) == 0:
+                label = torch.zeros(self.patch_size**2).to(device=self.device)
+            else:
+                if self.weighted_majority_vote:
+                    # higher similarity -> higher weight
+                    assigned_similarities = similarities[cluster_assignment == idx, idx]
+                    weights = torch.softmax(assigned_similarities, dim=0)
+                    weights = weights.unsqueeze(1).unsqueeze(2)
+                else:
+                    weights = 1.0
+
+                assigned_train_labels = train_labels[cluster_assignment == idx]
+                vote = torch.sum(weights * assigned_train_labels, dim=0)
+                label = torch.argmax(vote, dim=1)
+            
             self.cluster_labels.append(label)
 
         self.cluster_labels = torch.stack(self.cluster_labels, dim=1).unsqueeze(0).unsqueeze(0)
-
-    @torch.no_grad()
-    def score(self, loader):
-        top1 = []
-        
-        print("Compute score...")
-        progress_bar = tqdm(total=len(loader))
-        for idx, (image, target) in enumerate(loader):
-            image = image.to(device=self.device)
-            target = target.to(device=self.device)
-
-            pred = self.forward(image)
-            bs = pred.size(0)
-            for i in range(bs):
-                top1.append(mIoU(pred[i], target[i]))
-
-            if idx % self.logger.config['eval_freq'] == 0 or idx == len(loader):
-                self.logger.log_segmentation(image[0], pred[0], target[0], step=idx, logit=False)
-            progress_bar.update()
-
-        top1 = torch.stack(top1)
-        miou = torch.mean(top1).item()
-        iou_std = torch.std(top1).item()
-
-        self.logger.log_scalar_summary({
-                "mIoU": miou,
-                "IoU std": iou_std,
-            })
-
-        return miou, iou_std
-
-    def _similarity(self, x, y, inplace=False, normalize=True):
-        return self.kmeans.sim(x, y, inplace, normalize)
-
-    def _extract_feature(self, images):
-        if self.feature == 'intermediate':
-            intermediate_output = self.backbone.get_intermediate_layers(images, self.n_blocks)
-        else:
-            intermediate_output = self.backbone.get_qkv(images, self.n_blocks, out=self.feature)
-        feat = torch.stack(intermediate_output, dim=2)
-        feat = torch.mean(feat, dim=2)
-        feat = feat[:, 1:]
-
-        return feat
 
     def _label_equal(self, label):
         labelled_data_idx = []
@@ -216,6 +154,9 @@ class KMeansSegmentator(nn.Module):
         ldi=  np.array(labelled_data_idx)
         return ldi, label
 
+    def _similarity(self, x, y, inplace=False, normalize=True):
+        return self.kmeans.sim(x, y, inplace, normalize)
+
     @property
     def centroids(self):
         return self.kmeans.centroids
@@ -227,19 +168,3 @@ class KMeansSegmentator(nn.Module):
     @property
     def distance(self):
         return self.kmeans.distance
-
-    @property
-    def embed_dim(self):
-        return self.backbone.embed_dim
-
-    @property
-    def patch_size(self):
-        return self.backbone.patch_embed.patch_size
-
-    @property
-    def img_size(self):
-        return self.backbone.patch_embed.img_size
-
-    @property
-    def num_patches(self):
-        return int((self.img_size / self.patch_size)**2)

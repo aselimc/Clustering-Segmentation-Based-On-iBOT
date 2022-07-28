@@ -1,4 +1,5 @@
 import argparse
+from xmlrpc.client import boolean
 
 from torch.utils.data import DataLoader
 from torchvision import datasets
@@ -28,7 +29,7 @@ def main(args):
 
     kmeans = KMeansSegmentator(backbone,
                     logger,
-                    k=args.n_neighbors,
+                    k=args.n_centroids,
                     feature=args.feature,
                     smooth_mask=args.smooth_mask,
                     n_blocks=args.n_blocks,
@@ -37,8 +38,11 @@ def main(args):
                     init_mode=args.init,
                     n_redo=args.n_init,
                     max_iter=args.max_iter,
+                    tol=args.tol,
                     percentage=args.percentage,
-                    tol=args.tol)
+                    background_label_percentage=args.background_label_percentage,
+                    fit_clusters=args.fit_clusters,
+                    arch = args.arch)
 
     ## TRAINING DATASET ##
     transform = _transforms.Compose([
@@ -50,7 +54,7 @@ def main(args):
           + [_transforms.MergeContours()]
     )
 
-    train_dataset = PartialDatasetVOC(percentage = args.percentage, root=args.root, image_set='train', download=False, transforms=transform)
+    train_dataset = PartialDatasetVOC(percentage=1.0, root=args.root, image_set='train', download=False, transforms=transform)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.workers)
     val_dataset = datasets.VOCSegmentation(root=args.root, image_set='val', download=False, transforms=transform)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size)
@@ -63,15 +67,16 @@ def main(args):
 def parser_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', type=str, default="data")
-    parser.add_argument('--weights', type=str, default="weights/ViT-B16.pth")
-    parser.add_argument('--arch', type=str, default="vit_base")
+    parser.add_argument('--weights', type=str, default="weights/ViT-L16.pth")
+    parser.add_argument('--arch', type=str, default="vit_large")
     parser.add_argument('--feature', type=str, choices=['intermediate', 'query', 'key', 'value'],
                         default='intermediate')
     parser.add_argument('--patch_size', type=int, default=16)
     parser.add_argument('--n_blocks', type=int, default=1)
-    parser.add_argument('--patch_labeling', type=str, choices=['coarse', 'fine'], default='coarse')
-    parser.add_argument('--n_neighbors', type=int, default=20)
+    parser.add_argument('--patch_labeling', type=str, choices=['coarse', 'fine'], default='fine')
+    parser.add_argument('--n_centroids', type=int, default=20)
     parser.add_argument('--smooth_mask', action='store_true')
+    parser.add_argument('--weighted_majority_vote', action='store_true')
     parser.add_argument('--max_iter', type=int, default=300)
     parser.add_argument('--tol', type=float, default=1e-4),
     parser.add_argument('--init', type=str, choices=['kmeans++', 'random'], default='kmeans++')
@@ -79,10 +84,12 @@ def parser_args():
     parser.add_argument('--distance', type=str, choices=['euclidean', 'cosine'], default='euclidean')
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument("--percentage", type=float, default=0.1)
+    parser.add_argument("--background_label_percentage", type=float, default=1.0)
     parser.add_argument("--segmentation", type=str, choices=['binary', 'multi'], default='multi')
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--eval_freq", type=int, default=5)
     parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--fit_clusters", type=bool, default=True)
 
     return parser.parse_args()
 
