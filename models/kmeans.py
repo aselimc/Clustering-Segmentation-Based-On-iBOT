@@ -38,7 +38,7 @@ class KMeansSegmentator(_BaseSegmentator):
         
         self.percentage = percentage
         self.weighted_majority_vote = weighted_majority_vote
-        self.fit_clusters = True # change this
+        self.fit_clusters = False # change this
         self.arch = arch
         self.extract_vit_features = False # change this
 
@@ -86,6 +86,7 @@ class KMeansSegmentator(_BaseSegmentator):
             train_features = torch.load("train_features.pt")
             train_labels = torch.load("train_labels.pt")
         
+        train_features_raw = train_features
         train_features = train_features.permute(1, 0).contiguous()
         train_labels = train_labels.long()
         
@@ -98,7 +99,7 @@ class KMeansSegmentator(_BaseSegmentator):
             print("\nUsing previously fitted clusters(cluster_centroids.pt)")
             loaded_centroids = torch.load('cluster_centroids.pt')
             self.kmeans.n_redo = 1
-            self.kmeans.max_iter = 1
+            self.kmeans.max_iter = 20
             self.kmeans.fit(train_features, loaded_centroids)
             torch.save(self.centroids, 'cluster_centroids.pt')
 
@@ -109,9 +110,9 @@ class KMeansSegmentator(_BaseSegmentator):
 
             balanced_train_features = []
             balanced_train_labels = []
-            train_features = train_features.reshape(-1, 1024 if self.arch =="vit_large" else 768)
+            
             for i in range(len(ldi)):
-                balanced_train_features.append(train_features[ldi[i]])
+                balanced_train_features.append(train_features_raw[ldi[i]])
                 balanced_train_labels.append(train_labels[ldi[i]])
             
             balanced_train_features = torch.cat(balanced_train_features, dim=0)
