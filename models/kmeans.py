@@ -33,7 +33,8 @@ class KMeansSegmentator(_BaseSegmentator):
                              init_mode=init_mode,
                              n_redo=n_redo,
                              max_iter=max_iter,
-                             tol=tol)
+                             tol=tol,
+                             verbose=5)
         
         self.percentage = percentage
         self.weighted_majority_vote = weighted_majority_vote
