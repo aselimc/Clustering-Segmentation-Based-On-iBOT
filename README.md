@@ -54,13 +54,14 @@ Linear Probing
 <table>
   <tr>
     <td>Arch</td>
-    <td colspan=3 align="center">Intermediate</td>
-    <td colspan=3 align="center">Query</td>
-    <td colspan=3 align="center">Key</td>
-    <td colspan=3 align="center">Value</td>
+    <td colspan=4 align="center">Intermediate</td>
+    <td colspan=4 align="center">Query</td>
+    <td colspan=4 align="center">Key</td>
+    <td colspan=4 align="center">Value</td>
   </tr>
   <tr>
     <td></td>
+    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
@@ -85,18 +86,29 @@ Linear Probing
     <td></td>
     <td></td>
     <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
   </tr>
   <tr>
     <td>ViT-Large</td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
+    <td>0.237</td>
+    <td>0.517</td>
+    <td>0.655</td>
+    <td>0.675</td>
+    <td>0.171</td>
+    <td>0.462</td>
+    <td>0.603</td>
+    <td>0.619</td>
+    <td>0.200</td>
+    <td>0.322</td>
+    <td>0.450</td>
+    <td>0.448</td>
+    <td>0.205</td>
+    <td>0.478</td>
+    <td>0.615</td>
+    <td>0.637</td>
   </tr>
 </table>
 
@@ -104,13 +116,14 @@ KNN
 <table>
   <tr>
     <td>Arch</td>
-    <td colspan=3 align="center">Intermediate</td>
-    <td colspan=3 align="center">Query</td>
-    <td colspan=3 align="center">Key</td>
-    <td colspan=3 align="center">Value</td>
+    <td colspan=4 align="center">Intermediate</td>
+    <td colspan=4 align="center">Query</td>
+    <td colspan=4 align="center">Key</td>
+    <td colspan=4 align="center">Value</td>
   </tr>
   <tr>
     <td></td>
+    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
@@ -135,18 +148,26 @@ KNN
     <td></td>
     <td></td>
     <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
   </tr>
   <tr>
     <td>ViT-Large</td>
+    <td>0.288</td>
     <td>0.511</td>
     <td>0.580</td>
     <td>0.601</td>
+    <td>0.214</td>
     <td>0.451</td>
     <td>0.544</td>
     <td>0.575</td>
+    <td>0.237</td>
     <td>0.454</td>
     <td>0.540</td>
     <td>0.559</td>
+    <td>0.258</td>
     <td>0.477</td>
     <td>0.551</td>
     <td>0.574</td>
@@ -157,13 +178,14 @@ KMeans
 <table>
   <tr>
     <td>Arch</td>
-    <td colspan=3 align="center">Intermediate</td>
-    <td colspan=3 align="center">Query</td>
-    <td colspan=3 align="center">Key</td>
-    <td colspan=3 align="center">Value</td>
+    <td colspan=4 align="center">Intermediate</td>
+    <td colspan=4 align="center">Query</td>
+    <td colspan=4 align="center">Key</td>
+    <td colspan=4 align="center">Value</td>
   </tr>
   <tr>
     <td></td>
+    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
@@ -191,9 +213,17 @@ KMeans
     <td></td>
     <td></td>
     <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
   </tr>
   <tr>
     <td>ViT-Large</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
     <td></td>
     <td></td>
     <td></td>
@@ -213,13 +243,14 @@ Agglomerative Clustering
 <table>
   <tr>
     <td>Arch</td>
-    <td colspan=3 align="center">Intermediate</td>
-    <td colspan=3 align="center">Query</td>
-    <td colspan=3 align="center">Key</td>
-    <td colspan=3 align="center">Value</td>
+    <td colspan=4 align="center">Intermediate</td>
+    <td colspan=4 align="center">Query</td>
+    <td colspan=4 align="center">Key</td>
+    <td colspan=4 align="center">Value</td>
   </tr>
   <tr>
     <td></td>
+    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
@@ -247,9 +278,17 @@ Agglomerative Clustering
     <td></td>
     <td></td>
     <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
   </tr>
   <tr>
     <td>ViT-Large</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
     <td></td>
     <td></td>
     <td></td>
