@@ -27,12 +27,12 @@ class KMeansSegmentator(_BaseSegmentator):
                  **kwargs):
         super(KMeansSegmentator, self).__init__(backbone, logger, **kwargs)
 
-        """self.kmeans = KMeans(n_clusters=k,
+        self.kmeans = KMeans(n_clusters=k,
                              distance=distance,
                              init_mode=init_mode,
                              n_redo=n_redo,
                              max_iter=max_iter,
-                             tol=tol)"""
+                             tol=tol)
         
         self.percentage = percentage
         self.weighted_majority_vote = weighted_majority_vote
