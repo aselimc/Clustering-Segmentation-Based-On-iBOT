@@ -33,16 +33,13 @@ with a `--help` flag or refer to our provided example
 <a href="https://github.com/aselimc/iBot-cv/tree/main/example">bash scripts</a>.
 
 ## Segmentation
-<style>
-img {
-  display: inline-block;
-}
-</style>
-<img src=".github\segmentation\bus.png">
-<img src=".github\segmentation\motorbike.png">
-<img src=".github\segmentation\plane.png">
-<img src=".github\segmentation\train.png">
-<img src=".github\segmentation\kid.png">
-<img src=".github\segmentation\women.png">
-<img src=".github\segmentation\dog.png">
-<img src=".github\segmentation\cat.png">
+| | | |
+|:-------------------------:|:-------------------------:|:-------------------------:|
+<img src=".github\segmentation\bus.png">|
+<img src=".github\segmentation\motorbike.png">|
+<img src=".github\segmentation\plane.png">|
+<img src=".github\segmentation\train.png">|
+<img src=".github\segmentation\kid.png">|
+<img src=".github\segmentation\women.png">|
+<img src=".github\segmentation\dog.png">|
+<img src=".github\segmentation\cat.png">|
