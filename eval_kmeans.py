@@ -51,7 +51,7 @@ def main(args):
           + [_transforms.MergeContours()]
     )
 
-    train_dataset = PartialDatasetVOC(percentage=0.01, root=args.root, image_set='train', download=False, transforms=transform)
+    train_dataset = PartialDatasetVOC(percentage=1.0, root=args.root, image_set='train', download=False, transforms=transform)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.workers)
     val_dataset = datasets.VOCSegmentation(root=args.root, image_set='val', download=False, transforms=transform)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size)
