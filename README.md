@@ -48,3 +48,204 @@ with a `--help` flag or refer to our provided example
   <td><img src=".github\segmentation\cat.png"></td>
   </td>
 </table>
+
+## Mean Intersection over Union
+Linear Probing
+<table>
+  <tr>
+    <td>Arch</td>
+    <td colspan=3 align="center">Intermediate</td>
+    <td colspan=3 align="center">Query</td>
+    <td colspan=3 align="center">Key</td>
+    <td colspan=3 align="center">Value</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>10%</td>
+    <td>50%</td>
+    <td>100%</td>
+    <td>10%</td>
+    <td>50%</td>
+    <td>100%</td>
+    <td>10%</td>
+    <td>50%</td>
+    <td>100%</td>
+    <td>10%</td>
+    <td>50%</td>
+    <td>100%</td>
+  </tr>
+  <tr>
+    <td>ViT-Base</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>ViT-Large</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
+
+KNN
+<table>
+  <tr>
+    <td>Arch</td>
+    <td colspan=3 align="center">Intermediate</td>
+    <td colspan=3 align="center">Query</td>
+    <td colspan=3 align="center">Key</td>
+    <td colspan=3 align="center">Value</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>10%</td>
+    <td>50%</td>
+    <td>100%</td>
+    <td>10%</td>
+    <td>50%</td>
+    <td>100%</td>
+    <td>10%</td>
+    <td>50%</td>
+    <td>100%</td>
+    <td>10%</td>
+    <td>50%</td>
+    <td>100%</td>
+  </tr>
+  <tr>
+    <td>ViT-Base</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>ViT-Large</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
+
+KMeans
+<table>
+  <tr>
+    <td>Arch</td>
+    <td colspan=3 align="center">Intermediate</td>
+    <td colspan=3 align="center">Query</td>
+    <td colspan=3 align="center">Key</td>
+    <td colspan=3 align="center">Value</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>10%</td>
+    <td>50%</td>
+    <td>100%</td>
+    <td>10%</td>
+    <td>50%</td>
+    <td>100%</td>
+    <td>10%</td>
+    <td>50%</td>
+    <td>100%</td>
+    <td>10%</td>
+    <td>50%</td>
+    <td>100%</td>
+  </tr>
+  <tr>
+    <td>ViT-Base</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>ViT-Large</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
+
+Agglomerative Clustering
+<table>
+  <tr>
+    <td>Arch</td>
+    <td colspan=3 align="center">Intermediate</td>
+    <td colspan=3 align="center">Query</td>
+    <td colspan=3 align="center">Key</td>
+    <td colspan=3 align="center">Value</td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>10%</td>
+    <td>50%</td>
+    <td>100%</td>
+    <td>10%</td>
+    <td>50%</td>
+    <td>100%</td>
+    <td>10%</td>
+    <td>50%</td>
+    <td>100%</td>
+    <td>10%</td>
+    <td>50%</td>
+    <td>100%</td>
+  </tr>
+  <tr>
+    <td>ViT-Base</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td>ViT-Large</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
