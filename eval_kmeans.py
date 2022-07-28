@@ -28,7 +28,7 @@ def main(args):
 
     kmeans = KMeansSegmentator(backbone,
                     logger,
-                    k=args.n_neighbors,
+                    k=args.n_centroids,
                     feature=args.feature,
                     smooth_mask=args.smooth_mask,
                     n_blocks=args.n_blocks,
@@ -38,7 +38,8 @@ def main(args):
                     n_redo=args.n_init,
                     max_iter=args.max_iter,
                     tol=args.tol,
-                    percentage=args.percentage)
+                    percentage=args.percentage,
+                    background_label_percentage=args.background_label_percentage)
 
     ## TRAINING DATASET ##
     transform = _transforms.Compose([
@@ -70,8 +71,9 @@ def parser_args():
     parser.add_argument('--patch_size', type=int, default=16)
     parser.add_argument('--n_blocks', type=int, default=1)
     parser.add_argument('--patch_labeling', type=str, choices=['coarse', 'fine'], default='fine')
-    parser.add_argument('--n_neighbors', type=int, default=20)
+    parser.add_argument('--n_centroids', type=int, default=20)
     parser.add_argument('--smooth_mask', action='store_true')
+    parser.add_argument('--weighted_majority_vote', action='store_true')
     parser.add_argument('--max_iter', type=int, default=300)
     parser.add_argument('--tol', type=float, default=1e-4),
     parser.add_argument('--init', type=str, choices=['kmeans++', 'random'], default='kmeans++')
@@ -79,6 +81,7 @@ def parser_args():
     parser.add_argument('--distance', type=str, choices=['euclidean', 'cosine'], default='euclidean')
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument("--percentage", type=float, default=0.1)
+    parser.add_argument("--background_label_percentage", type=float, default=1.0)
     parser.add_argument("--segmentation", type=str, choices=['binary', 'multi'], default='multi')
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--eval_freq", type=int, default=5)
