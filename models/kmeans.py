@@ -67,12 +67,13 @@ class KMeansSegmentator(_BaseSegmentator):
 
     @torch.no_grad()
     def fit(self, loader):
+        print("extractvitfeatures", self.extract_vit_features)
         if self.extract_vit_features:
             train_features, train_labels = self._transform_data(loader)
             torch.save(train_features, "train_features.pt")
             torch.save(train_labels, "train_labels.pt")
         else:
-            print("\nUsing previously extracted features")
+            print("\nUsing previously extracted features(train_features.pt, train_labels.pt)")
             train_features = torch.load("train_features.pt")
             train_labels = torch.load("train_labels.pt")
         
