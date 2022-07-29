@@ -107,7 +107,9 @@ class KMeansSegmentator(_BaseSegmentator):
         train_features = train_features[:, :num_samples]
         train_labels = train_labels[:num_samples]
         if self.percentage == 1.0:
-            torch.save(F.one_hot(train_labels[:int(train_labels.size(0)/2)], self.num_classes), "half_of_train_labels.pt")
+            a = F.one_hot(train_labels[:int(train_labels.size(0)/2)], self.num_classes)
+            torch.save(a, "half_of_train_labels.pt")
+            del a
             b = F.one_hot(train_labels[int(train_labels.size(0)/2):], self.num_classes)
         
         train_labels = torch.cat((torch.load("half_of_train_labels.pt"), b), dim=0)
