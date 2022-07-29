@@ -107,9 +107,8 @@ class KMeansSegmentator(_BaseSegmentator):
         train_features = train_features[:, :num_samples]
         train_labels = train_labels[:num_samples]
         if self.percentage == 1.0:
-            print("a:", int(train_labels.size(0)/2), "b:", int(train_labels.size(0)/2))
-            a = F.one_hot(train_labels[:int(train_labels.size(0)/2)], self.num_classes)
-            b = F.one_hot(train_labels[int(train_labels.size(0)/2):], self.num_classes)
+            a = F.one_hot(train_labels[:int(train_labels.size(0)/2)].cuda(), self.num_classes)
+            b = F.one_hot(train_labels[int(train_labels.size(0)/2):].cuda(), self.num_classes)
         train_labels = F.one_hot(train_labels, self.num_classes)
 
 
