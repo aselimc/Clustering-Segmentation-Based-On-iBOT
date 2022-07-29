@@ -46,7 +46,7 @@ class KMeansSegmentator(_BaseSegmentator):
         if percentage == 0.01:
             self.maximum_count_per_class = 100
         elif percentage == 0.1:
-            self.maximum_count_per_class = 1000
+            self.maximum_count_per_class = 1500
         elif percentage == 0.3:
             self.maximum_count_per_class = 5000
         elif percentage == 0.5:
@@ -98,7 +98,7 @@ class KMeansSegmentator(_BaseSegmentator):
         else:
             print("\nUsing previously fitted clusters(cluster_centroids.pt)")
             loaded_centroids = torch.load('cluster_centroids.pt')
-            self.kmeans.n_redo = 2
+            self.kmeans.n_redo = 1
             self.kmeans.max_iter = 300
             self.kmeans.fit(train_features, loaded_centroids)
             #torch.save(self.centroids, 'cluster_centroids.pt')
