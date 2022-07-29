@@ -38,7 +38,7 @@ class KMeansSegmentator(_BaseSegmentator):
         
         self.percentage = percentage
         self.weighted_majority_vote = weighted_majority_vote
-        self.fit_clusters = True # change this
+        self.fit_clusters = False # change this
         self.arch = arch
         self.extract_vit_features = False # change this
 
