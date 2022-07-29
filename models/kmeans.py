@@ -109,7 +109,7 @@ class KMeansSegmentator(_BaseSegmentator):
         if self.percentage == 1.0:
             s = train_labels.size(0)
             for i in range(4):
-                train_labels = torch.cat((train_labels, F.one_hot(train_labels[i*int(s/4):(i+1)*int(s/4)]), self.num_classes), dim=0)
+                train_labels = torch.cat((train_labels, F.one_hot(train_labels[i*int(s/4):(i+1)*int(s/4)], self.num_classes)), dim=0)
         
         
         #train_labels = F.one_hot(train_labels, self.num_classes)
