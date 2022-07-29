@@ -38,7 +38,7 @@ class KMeansSegmentator(_BaseSegmentator):
         
         self.percentage = percentage
         self.weighted_majority_vote = weighted_majority_vote
-        self.fit_clusters = False # change this
+        self.fit_clusters = True # change this
         self.arch = arch
         self.extract_vit_features = False # change this
 
@@ -101,7 +101,7 @@ class KMeansSegmentator(_BaseSegmentator):
             self.kmeans.n_redo = 1
             self.kmeans.max_iter = 20
             self.kmeans.fit(train_features, loaded_centroids)
-            torch.save(self.centroids, 'cluster_centroids.pt')
+            #torch.save(self.centroids, 'cluster_centroids.pt')
 
         # dataset balancing prior cluster labeling
         if self.percentage < 1.:
