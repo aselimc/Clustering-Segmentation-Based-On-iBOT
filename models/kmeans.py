@@ -111,14 +111,14 @@ class KMeansSegmentator(_BaseSegmentator):
             
             a = F.one_hot(train_labels[0:int(s/4)], self.num_classes)
             b = F.one_hot(train_labels[int(s/4):int(s/2)], self.num_classes)
-            half = torch.cat((a,b), dim=0)
+            half = torch.stack((a,b), dim=0)
             del a
             del b
             c = F.one_hot(train_labels[int(s/2):int(3*s/4)], self.num_classes)
-            half = torch.cat((half, c), dim=0)
+            half = torch.stack((half, c), dim=0)
             del c
             d = F.one_hot(train_labels[int(3*s/4):s] , self.num_classes)
-            train_labels = torch.cat((half, d), dim=0)
+            train_labels = torch.stack((half, d), dim=0)
             del d
                 
         #train_labels = F.one_hot(train_labels, self.num_classes)
