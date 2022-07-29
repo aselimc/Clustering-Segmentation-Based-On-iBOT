@@ -101,41 +101,14 @@ class KMeansSegmentator(_BaseSegmentator):
             self.kmeans.n_redo = 1
             self.kmeans.max_iter = 300
             self.kmeans.fit(train_features, loaded_centroids)
-            #torch.save(self.centroids, 'cluster_centroids.pt')
-
-        """# dataset balancing prior cluster labeling
-        if self.percentage < 1.:
-            lab = torch.max(train_labels, dim=1).values
-            ldi, label = self._label_equal(lab)
-
-            balanced_train_features = []
-            balanced_train_labels = []
-            
-            for i in range(len(ldi)):
-                balanced_train_features.append(train_features_raw[ldi[i]])
-                balanced_train_labels.append(train_labels[ldi[i]])
-            
-            balanced_train_features = torch.cat(balanced_train_features, dim=0)
-            balanced_train_labels = torch.cat(balanced_train_labels, dim=0)
-
-            train_labels = balanced_train_labels.reshape(-1, 256)
-            train_features = balanced_train_features.reshape(-1, 1024 if self.arch =="vit_large" else 768) 
-            train_features = train_features.permute(1, 0).contiguous()
-        else:
-            train_features = train_features.permute(1, 0).contiguous()
-        
-        if self.percentage == 1.0:
-            a = F.one_hot(train_labels[0:int(train_labels.size(0)/2)], self.num_classes)
-            b = F.one_hot(train_labels[int(train_labels.size(0)/2):int(train_labels.size(0))], self.num_classes)
-            train_labels = torch.cat((a,b), dim=0)
-        else:    
-            train_labels = F.one_hot(train_labels, self.num_classes)"""
-
 
         # allow only percentage of labels (simulating dataset with small number of labels)
         num_samples = int(train_features.size(1) * self.percentage)
         train_features = train_features[:, :num_samples]
         train_labels = train_labels[:num_samples]
+        if self.percentage == 1.0:
+            a = F.one_hot(train_labels[:int(train_labels.size(0)/2)], self.num_classes)
+            b = F.one_hot(train_labels[int(train_labels.size(0)/2):], self.num_classes)
         train_labels = F.one_hot(train_labels, self.num_classes)
 
 
