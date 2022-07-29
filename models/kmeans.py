@@ -133,10 +133,10 @@ class KMeansSegmentator(_BaseSegmentator):
 
 
         # allow only percentage of labels (simulating dataset with small number of labels)
-        train_labels = F.one_hot(train_labels, self.num_classes)
         num_samples = int(train_features.size(1) * self.percentage)
         train_features = train_features[:, :num_samples]
         train_labels = train_labels[:num_samples]
+        train_labels = F.one_hot(train_labels, self.num_classes)
 
 
         # label clusters
