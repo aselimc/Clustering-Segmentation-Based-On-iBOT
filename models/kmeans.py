@@ -98,7 +98,7 @@ class KMeansSegmentator(_BaseSegmentator):
         else:
             print("\nUsing previously fitted clusters(cluster_centroids.pt)")
             loaded_centroids = torch.load('cluster_centroids.pt')
-            self.kmeans.n_redo = 1
+            self.kmeans.n_redo = 5
             self.kmeans.max_iter = 20
             self.kmeans.fit(train_features, loaded_centroids)
             #torch.save(self.centroids, 'cluster_centroids.pt')
@@ -130,6 +130,13 @@ class KMeansSegmentator(_BaseSegmentator):
             train_labels = torch.cat((a,b), dim=0)
         else:    
             train_labels = F.one_hot(train_labels, self.num_classes)
+
+
+        """# allow only percentage of labels (simulating dataset with small number of labels)
+        num_samples = int(train_features.size(1) * self.percentage)
+        train_features = train_features[:, :num_samples]
+        train_labels = train_labels[:num_samples]"""
+
 
         # label clusters
         print("Assigning cluster labels...")
