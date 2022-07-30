@@ -4,8 +4,11 @@ work_dirs/
 work_dirs
 *.zip
 __pycache__/
+wandb/*
+wandb
 .*
 .*/
+*.npy
 *.pth
 *.out
 pics/

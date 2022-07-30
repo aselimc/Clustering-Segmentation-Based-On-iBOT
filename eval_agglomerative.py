@@ -5,7 +5,7 @@ from torchvision import datasets
 
 from dataloader import PartialDatasetVOC
 import models
-from models.agglomerative import AgglomerativeClustering
+from models.agglomerative import AgglomerativeSegmentator
 from utils.logger import WBLogger
 import utils.transforms as _transforms
 from utils import load_pretrained_weights
@@ -25,7 +25,7 @@ def main(args):
                             model_name=args.arch,
                             patch_size=args.patch_size)
 
-    agglomerative = AgglomerativeClustering(
+    agglomerative = AgglomerativeSegmentator(
                 backbone,
                 logger,
                 n_clusters=args.n_clusters,
@@ -33,10 +33,9 @@ def main(args):
                 feature=args.feature,
                 n_blocks=args.n_blocks,
                 use_cuda=True,
-                calculate_purity=False,
                 patch_labeling=args.patch_labeling,
-                n_classes=21,
-                affinity=args.distance,
+                num_classes=21,
+                distance=args.distance,
                 linkage=args.linkage,
                 percentage=args.label_percentage,
                 smooth_mask=args.smooth_mask,
@@ -59,6 +58,7 @@ def main(args):
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size)
 
     if args.fit_clusters:
+        print("Reading from local cluster centroids")
         agglomerative.fit(train_loader)
     else:
         agglomerative.load_cluster_centroids()

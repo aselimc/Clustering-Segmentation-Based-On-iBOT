@@ -1,16 +1,15 @@
 from typing import List
-import torch.nn as nn
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm
-from sklearn import cluster
+from sklearn.cluster import AgglomerativeClustering
 from scipy.stats import mode
 import numpy as np
 from sklearn.metrics import pairwise_distances
 from utils.metrics import mIoU
-from utils.transforms import PatchwiseSmoothMask
+from . import _BaseSegmentator
 
-class AgglomerativeClustering(nn.Module):
+class AgglomerativeSegmentator(_BaseSegmentator):
     
     @torch.no_grad()
     def __init__(self,
@@ -18,42 +17,33 @@ class AgglomerativeClustering(nn.Module):
                 logger,
                 n_clusters,
                 n_chunks,
-                feature='intermediate',
-                n_blocks=1,
-                use_cuda=True,
-                calculate_purity=False,
-                patch_labeling='coarse',
-                n_classes=21,
-                affinity='euclidean',
                 linkage='ward',
+                distance="euclidean",
                 percentage=1.0,
-                smooth_mask=True,
                 k=1,
-                fit_only_labelled=False,  
+                fit_only_labelled=False,
+                **kwargs 
         ):
-        super(AgglomerativeClustering, self).__init__()
-        self.device = torch.device('cuda') if use_cuda else torch.device('cpu')
-        self.backbone = backbone.to(device=self.device)
-        self.feature = feature
-        self.n_blocks = n_blocks
+        super(AgglomerativeSegmentator, self).__init__(backbone, logger, **kwargs)
+
+
         self.n_chunks = n_chunks
-        self.num_classes = n_classes
-        self.logger = logger
-        self.patch_labeling = patch_labeling
-        self.calculate_purity = calculate_purity
-        self.unfold = nn.Unfold(kernel_size=self.patch_size, stride=self.patch_size)
         self.n_clusters = n_clusters
-        self.affinity = affinity
+        self.affinity = distance
         self.linkage = linkage
         self.percentage = percentage
         self.maximum_count_per_class = 1000
-        self.chunked_c_centroids : List
-        self.chunked_c_labels: List
         self.global_step =0
-        self.smooth = PatchwiseSmoothMask(self.patch_size) if smooth_mask else nn.Identity()
         self.k = k
         self.fit_only_labelled = fit_only_labelled
-
+        self.chunked_c_centroids = []
+        self.chunked_c_labels= []
+        self.model = AgglomerativeClustering(n_clusters=self.n_clusters,
+                                             affinity=self.affinity, 
+                                             compute_full_tree=False, 
+                                             linkage=self.linkage, 
+                                             compute_distances=True)
+    
     @torch.no_grad()
     def score(self, loader):
         print("Evaluating on different chunks")
@@ -76,8 +66,6 @@ class AgglomerativeClustering(nn.Module):
 
             if idx % self.logger.config['eval_freq'] == 0 or idx == len(loader):
                 self.logger.log_segmentation(images[0], pred[0], seg[0], step=idx, logit=False)
-                self.logger.log_segmentation(images[2], pred[2], seg[2], step=idx+1, logit=False)
-
 
             self.global_step += 1
             progress_bar.update()
@@ -131,47 +119,16 @@ class AgglomerativeClustering(nn.Module):
 
     @torch.no_grad()
     def fit(self, loader):
-        train_features = []
-        train_labels = []
-        self.cluster_labels = []
+        train_labels, train_features = self._transform_data(loader)
 
-        print("Extracting ViT features...")
-        progress_bar = tqdm(total=len(loader))
-        for image, target in loader:
-            image = image.to(device=self.device)
-            feat = self._extract_feature(image)
-            feat = feat.flatten(start_dim=0, end_dim=1).cpu()
-            train_features.append(feat)
-
-            # divide ground truth mask into patches
-            target = target.to(device=self.device)
-            target = self.unfold(target.unsqueeze(1).float())
-            target = target.permute(0, 2, 1)
-            if self.patch_labeling == 'coarse':
-                target = target.long()
-                target = F.one_hot(target, self.num_classes)
-                target = torch.argmax(target.sum(dim=2), dim=2)
-                target = target.unsqueeze(2).expand(-1, self.num_patches, self.patch_size**2)
-            target = target.flatten(start_dim=0, end_dim=1)
-            target = target.byte().cpu()
-            train_labels.append(target)
-            progress_bar.update()
-        progress_bar.close()
-        print("\nFitting chunks into clusters...")
-        train_features = torch.cat(train_features, dim=0).permute(0, 1).contiguous()
-        train_labels = torch.cat(train_labels, dim=0).long()
         chunked_features = train_features.chunk(self.n_chunks)
         chunked_labels = train_labels.chunk(self.n_chunks)
         progress_bar = tqdm(total=self.n_chunks)
-        chunked_c_centroids = []
-        chunked_c_labels = []
         for feature, label in zip(chunked_features, chunked_labels):
             cluster_centroids, cluster_data_labels = self.fit_chunks(feature, label)
-            chunked_c_centroids.append(cluster_centroids)
-            chunked_c_labels.append(cluster_data_labels)
+            self.chunked_c_centroids.append(cluster_centroids)
+            self.chunked_c_labels.append(cluster_data_labels)
             progress_bar.update()
-        self.chunked_c_centroids = chunked_c_centroids
-        self.chunked_c_labels = chunked_c_labels
         self.save_cluster_centroids()
 
     def fit_chunks(self, feature, label):
@@ -184,12 +141,12 @@ class AgglomerativeClustering(nn.Module):
             
         else:
             ldi = np.arange(len(label))
-        model = cluster.AgglomerativeClustering(n_clusters=self.n_clusters, affinity=self.affinity,
-                                      compute_full_tree=False, linkage=self.linkage, compute_distances=True)
+
+        #Not going to be used, only for experimental reasons
         if self.fit_only_labelled:
-            model = model.fit(feature[ldi])
+            model = self.model.fit(feature[ldi])
         else:
-            model = model.fit(feature)
+            model = self.model.fit(feature)
         cluster_data_labels = self._label_cluster(model, label, ldi)
         cluster_centroids = self._get_cluster_centroids(model, feature)
         del model
@@ -238,17 +195,6 @@ class AgglomerativeClustering(nn.Module):
         ldi=  np.array(labelled_data_idx)
         return ldi, label
 
-    def _extract_feature(self, images):
-        if self.feature == 'intermediate':
-            intermediate_output = self.backbone.get_intermediate_layers(images, self.n_blocks)
-        else:
-            intermediate_output = self.backbone.get_qkv(images, self.n_blocks, out=self.feature)
-        feat = torch.stack(intermediate_output, dim=2)
-        feat = torch.mean(feat, dim=2)
-        feat = feat[:, 1:]
-
-        return feat
-
     def save_cluster_centroids(self):
         np.save(f'c_centroid_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}_{self.maximum_count_per_class}_{self.n_clusters}.npy', np.array(self.chunked_c_centroids))
         np.save(f'c_label_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}_{self.maximum_count_per_class}_{self.n_clusters}.npy', np.array(self.chunked_c_labels))
@@ -256,15 +202,3 @@ class AgglomerativeClustering(nn.Module):
     def load_cluster_centroids(self):
         self.chunked_c_centroids = list(np.load(f'c_centroid_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}_{self.maximum_count_per_class}_{self.n_clusters}.npy'))
         self.chunked_c_labels = list(np.load(f'c_label_{self.feature}_{self.affinity}_{self.n_chunks}_{self.percentage}_{self.maximum_count_per_class}_{self.n_clusters}.npy'))
-
-    @property
-    def patch_size(self):
-        return self.backbone.patch_embed.patch_size
-
-    @property
-    def img_size(self):
-        return self.backbone.patch_embed.img_size
-
-    @property
-    def num_patches(self):
-        return int((self.img_size / self.patch_size)**2)
