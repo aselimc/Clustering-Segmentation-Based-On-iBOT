@@ -38,9 +38,9 @@ class KMeansSegmentator(_BaseSegmentator):
         
         self.percentage = percentage
         self.weighted_majority_vote = weighted_majority_vote
-        self.fit_clusters = False # change this
+        self.fit_clusters = True # change this
         self.arch = arch
-        self.extract_vit_features = False # change this
+        self.extract_vit_features = True # change this
     
         print("percentage", percentage)
         if percentage == 0.01:
@@ -85,6 +85,12 @@ class KMeansSegmentator(_BaseSegmentator):
             elif self.feature == "value":
                 torch.save(train_features, "train_features_value.pt")
                 torch.save(train_labels, "train_labels_value.pt")
+            elif self.feature == "query":
+                torch.save(train_features, "train_features_query.pt")
+                torch.save(train_labels, "train_labels_query.pt")
+            elif self.feature == "intermediate":
+                torch.save(train_features, "train_features_intermediate.pt")
+                torch.save(train_labels, "train_labels_intermediate.pt")
         else:
             print("\nUsing previously extracted features(train_features.pt, train_labels.pt)")
             if self.feature == "key":
@@ -93,6 +99,13 @@ class KMeansSegmentator(_BaseSegmentator):
             elif self.feature == "value":
                 train_features = torch.load("train_features_value.pt")
                 train_labels = torch.load("train_labels_value.pt")
+            elif self.feature == "query":
+                train_features = torch.load("train_features_query.pt")
+                train_labels = torch.load("train_labels_query.pt")
+            elif self.feature == "intermediate":
+                train_features = torch.load("train_features_intermediate.pt")
+                train_labels = torch.load("train_labels_intermediate.pt")
+
         
         train_features_raw = train_features
         train_features = train_features.permute(1, 0).contiguous()
@@ -108,6 +121,12 @@ class KMeansSegmentator(_BaseSegmentator):
             elif self.feature == "value":
                 self.kmeans.fit(train_features)
                 torch.save(self.centroids, 'cluster_centroids_value.pt')
+            elif self.feature == "query":
+                self.kmeans.fit(train_features)
+                torch.save(self.centroids, 'cluster_centroids_query.pt')
+            elif self.feature == "intermediate":
+                self.kmeans.fit(train_features)
+                torch.save(self.centroids, 'cluster_centroids_intermediate.pt')
             print("\nCluster centroids saved as cluster_centroids.pt")
         else:
             print("\nUsing previously fitted clusters(cluster_centroids.pt)")
@@ -116,6 +135,10 @@ class KMeansSegmentator(_BaseSegmentator):
                 loaded_centroids = torch.load('cluster_centroids_key.pt')
             elif self.feature == "value":
                 loaded_centroids = torch.load('cluster_centroids_value.pt')
+            elif self.feature == "query":
+                loaded_centroids = torch.load('cluster_centroids_query.pt')
+            elif self.feature == "intermediate":
+                loaded_centroids = torch.load('cluster_centroids_intermediate.pt')
 
             self.kmeans.n_redo = 1
             self.kmeans.max_iter = 300
