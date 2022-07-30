@@ -74,6 +74,7 @@ class _BaseSegmentator(nn.Module):
 
             if idx % self.logger.config['eval_freq'] == 0 or idx == len(loader):
                 self.logger.log_segmentation(image[0], pred[0], target[0], step=idx, logit=False)
+                self.logger.log_segmentation(image[2], pred[2], target[2], step=idx+1, logit=False)
             progress_bar.update()
 
         top1 = torch.stack(top1, dim=0)
