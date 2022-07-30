@@ -88,7 +88,7 @@ def parser_args():
     parser.add_argument("--background_label_percentage", type=float, default=1.0)
     parser.add_argument("--segmentation", type=str, choices=['binary', 'multi'], default='multi')
     parser.add_argument("--temperature", type=float, default=1.0)
-    parser.add_argument("--eval_freq", type=int, default=5)
+    parser.add_argument("--eval_freq", type=int, default=1)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--fit_clusters", type=bool)
     parser.add_argument("--extract_vit_features", type=bool)
