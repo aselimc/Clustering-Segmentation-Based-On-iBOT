@@ -26,19 +26,22 @@ def main(args):
                             patch_size=args.patch_size)
 
     agglomerative = AgglomerativeClustering(
-                    backbone,
-                    logger,
-                    n_clusters=args.n_clusters,
-                    n_chunks=args.n_chunks,
-                    feature=args.feature,
-                    n_blocks=args.n_blocks,
-                    use_cuda=True,
-                    distance=args.distance,
-                    calculate_purity=args.purity,
-                    patch_labeling=args.patch_labeling,
-                    percentage=args.label_percentage,
-                    affinity=args.distance,
-                    linkage=args.linkage)
+                backbone,
+                logger,
+                n_clusters=args.n_clusters,
+                n_chunks=args.n_chunks,
+                feature=args.feature,
+                n_blocks=args.n_blocks,
+                use_cuda=True,
+                calculate_purity=False,
+                patch_labeling=args.patch_labeling,
+                n_classes=21,
+                affinity=args.distance,
+                linkage=args.linkage,
+                percentage=args.label_percentage,
+                smooth_mask=args.smooth_mask,
+                k=1,
+                fit_only_labelled=args.fit_only_labelled)
 
     ## TRAINING DATASET ##
     transform = _transforms.Compose([
@@ -67,15 +70,12 @@ def parser_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', type=str, default="data/VOCtrainval_11-May-2012")
     parser.add_argument('--weights', type=str, default="weights/checkpoint.pth")
-    parser.add_argument('--arch', type=str, default="vit_large")
+    parser.add_argument('--arch', type=str, default="vit_base")
     parser.add_argument('--feature', type=str, choices=['intermediate', 'query', 'key', 'value'],
                         default='intermediate')
     parser.add_argument('--patch_size', type=int, default=16)
     parser.add_argument('--n_blocks', type=int, default=1)
     parser.add_argument('--patch_labeling', type=str, choices=['coarse', 'fine'], default='fine')
-    parser.add_argument('--n_neighbors', type=int, default=20)
-    parser.add_argument('--max_iter', type=int, default=300)
-    parser.add_argument('--tol', type=float, default=1e-4),
     parser.add_argument('--distance', type=str, choices=['euclidean', 'cosine'], default='euclidean')  
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument("--percentage", type=float, default=1)
@@ -84,10 +84,11 @@ def parser_args():
     parser.add_argument("--eval_freq", type=int, default=5)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument('--n_chunks', type=int, default=15)
-    parser.add_argument('--purity', type=bool, default=False)
-    parser.add_argument('--n_clusters', type=int, default=250)
-    parser.add_argument('--fit_clusters', type=bool, default=True)
+    parser.add_argument('--smooth_mask', type=bool, default=True)
+    parser.add_argument('--n_clusters', type=int, default=150)
+    parser.add_argument('--fit_clusters', type=bool, default=False)
     parser.add_argument('--linkage', type=str, choices=['ward', 'average', 'single', 'maximum'], default='ward')
+    parser.add_argument('--fit_only_labelled', type=bool, default=False)
 
 
     return parser.parse_args()
