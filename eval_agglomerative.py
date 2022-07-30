@@ -70,7 +70,7 @@ def parser_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', type=str, default="data/VOCtrainval_11-May-2012")
     parser.add_argument('--weights', type=str, default="weights/checkpoint.pth")
-    parser.add_argument('--arch', type=str, default="vit_large")
+    parser.add_argument('--arch', type=str, default="vit_base")
     parser.add_argument('--feature', type=str, choices=['intermediate', 'query', 'key', 'value'],
                         default='intermediate')
     parser.add_argument('--patch_size', type=int, default=16)
