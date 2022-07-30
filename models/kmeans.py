@@ -95,9 +95,10 @@ class KMeansSegmentator(_BaseSegmentator):
             print("\nFitting clusters...")
             self.kmeans.fit(train_features)
             torch.save(self.centroids, 'cluster_centroids.pt')
+            print("\nCluster centroids saved as cluster_centroids.pt")
         else:
             print("\nUsing previously fitted clusters(cluster_centroids.pt)")
-            loaded_centroids = torch.load('cluster_centroids.pt')
+            loaded_centroids = torch.load('cluster_centroids_intermediate.pt')
             self.kmeans.n_redo = 1
             self.kmeans.max_iter = 300
             self.kmeans.fit(train_features, loaded_centroids)
@@ -105,23 +106,8 @@ class KMeansSegmentator(_BaseSegmentator):
         # allow only percentage of labels (simulating dataset with small number of labels)
         num_samples = int(train_features.size(1) * self.percentage)
         train_features = train_features[:, :num_samples]
-        train_labels = train_labels[:num_samples]
-        if self.percentage == 1.0:
-            s = train_labels.size(0)
-            
-            a = F.one_hot(train_labels[0:int(s/4)], self.num_classes)
-            b = F.one_hot(train_labels[int(s/4):int(s/2)], self.num_classes)
-            half = torch.stack((a,b), dim=0)
-            del a
-            del b
-            c = F.one_hot(train_labels[int(s/2):int(3*s/4)], self.num_classes)
-            half = torch.stack((half, c), dim=0)
-            del c
-            d = F.one_hot(train_labels[int(3*s/4):s] , self.num_classes)
-            train_labels = torch.stack((half, d), dim=0)
-            del d
-                
-        #train_labels = F.one_hot(train_labels, self.num_classes)
+        train_labels = train_labels[:num_samples]        
+        train_labels = F.one_hot(train_labels, self.num_classes)
 
 
         # label clusters
