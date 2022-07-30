@@ -281,37 +281,37 @@ Agglomerative Clustering
     <td></td>
     <td></td>
     <td></td>
+    <td>0.509</td>
     <td></td>
     <td></td>
     <td></td>
+    <td>0.357</td>
     <td></td>
     <td></td>
     <td></td>
+    <td>0.395</td>
     <td></td>
     <td></td>
     <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
+    <td>0.454</td>
   </tr>
   <tr>
     <td>ViT-Large</td>
     <td></td>
+    <td>0.506</td>
+    <td>0.511</td>
+    <td>0.537</td>
     <td></td>
+    <td>0.402</td>
+    <td>0.414</td>
+    <td>0.417</td>
     <td></td>
+    <td>0.406</td>
+    <td>0.436</td>
+    <td>0.451</td>
     <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
+    <td>0.445</td>
+    <td>0.463</td>
+    <td>0.486</td>
   </tr>
 </table>
