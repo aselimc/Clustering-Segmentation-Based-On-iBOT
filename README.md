@@ -280,7 +280,7 @@ Agglomerative Clustering
     <td>ViT-Base</td>
     <td></td>
     <td></td>
-    <td></td>
+    <td>0.483</td>
     <td>0.509</td>
     <td></td>
     <td></td>
