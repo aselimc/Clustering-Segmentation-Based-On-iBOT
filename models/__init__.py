@@ -114,6 +114,7 @@ class _BaseSegmentator(nn.Module):
 
     @torch.no_grad()
     def _extract_feature(self, image, flatten=True):
+        print("Feature: ", self.feature)
         if self.feature == 'intermediate':
             intermediate_output = self.backbone.get_intermediate_layers(image, self.n_blocks)
         else:
