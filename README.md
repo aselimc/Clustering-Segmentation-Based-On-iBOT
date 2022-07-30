@@ -26,7 +26,7 @@ Each method can be evaluated by running its respective script
 python eval_linear.py
 python eval_knn.py
 python eval_kmeans.py
-python eval_agglomerative.py.py
+python eval_agglomerative.py
 ```
 together with the specified settings. For further details, please either run the script
 with a `--help` flag or refer to our provided example 
