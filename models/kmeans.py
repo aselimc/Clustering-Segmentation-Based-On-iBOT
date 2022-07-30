@@ -38,9 +38,9 @@ class KMeansSegmentator(_BaseSegmentator):
         
         self.percentage = percentage
         self.weighted_majority_vote = weighted_majority_vote
-        self.fit_clusters = True # change this
+        self.fit_clusters = False # change this
         self.arch = arch
-        self.extract_vit_features = True # change this
+        self.extract_vit_features = False # change this
 
         print("percentage", percentage)
         if percentage == 0.01:
@@ -83,8 +83,8 @@ class KMeansSegmentator(_BaseSegmentator):
             torch.save(train_labels, "train_labels_query.pt")
         else:
             print("\nUsing previously extracted features(train_features.pt, train_labels.pt)")
-            train_features = torch.load("train_features.pt")
-            train_labels = torch.load("train_labels.pt")
+            train_features = torch.load("train_features_query.pt")
+            train_labels = torch.load("train_labels_query.pt")
         
         train_features_raw = train_features
         train_features = train_features.permute(1, 0).contiguous()
