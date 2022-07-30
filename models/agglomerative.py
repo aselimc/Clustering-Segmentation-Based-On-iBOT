@@ -92,7 +92,7 @@ class AgglomerativeSegmentator(_BaseSegmentator):
             bs = image.size(0)
             centroid = torch.Tensor(centroid).to(self.device)
             label = torch.Tensor(label).to(self.device)
-            feat = self._extract_feature(image)
+            feat = self._extract_feature(image, flatten=False)
             h = int(np.sqrt(feat.shape[1]))
             feat = feat.flatten(start_dim=0, end_dim=1).permute(0, 1).contiguous()
             pred = self._predict(feat, centroid, label)
@@ -119,7 +119,7 @@ class AgglomerativeSegmentator(_BaseSegmentator):
 
     @torch.no_grad()
     def fit(self, loader):
-        train_labels, train_features = self._transform_data(loader)
+        train_features, train_labels = self._transform_data(loader)
 
         chunked_features = train_features.chunk(self.n_chunks)
         chunked_labels = train_labels.chunk(self.n_chunks)
