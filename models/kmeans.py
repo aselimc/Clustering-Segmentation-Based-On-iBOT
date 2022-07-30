@@ -38,9 +38,9 @@ class KMeansSegmentator(_BaseSegmentator):
         
         self.percentage = percentage
         self.weighted_majority_vote = weighted_majority_vote
-        self.fit_clusters = False # change this
+        self.fit_clusters = True # change this
         self.arch = arch
-        self.extract_vit_features = False # change this
+        self.extract_vit_features = True # change this
     
         print("percentage", percentage)
         if percentage == 0.01:
@@ -79,12 +79,20 @@ class KMeansSegmentator(_BaseSegmentator):
     def fit(self, loader):
         if self.extract_vit_features:
             train_features, train_labels = self._transform_data(loader)
-            torch.save(train_features, "train_features_query.pt")
-            torch.save(train_labels, "train_labels_query.pt")
+            if self.feature == "key":
+                torch.save(train_features, "train_features_key.pt")
+                torch.save(train_labels, "train_labels_key.pt")
+            elif self.feature == "value":
+                torch.save(train_features, "train_features_value.pt")
+                torch.save(train_labels, "train_labels_value.pt")
         else:
             print("\nUsing previously extracted features(train_features.pt, train_labels.pt)")
-            train_features = torch.load("train_features_query.pt")
-            train_labels = torch.load("train_labels_query.pt")
+            if self.feature == "key":
+                train_features = torch.load("train_features_key.pt")
+                train_labels = torch.load("train_labels_key.pt")
+            elif self.feature == "value":
+                train_features = torch.load("train_features_value.pt")
+                train_labels = torch.load("train_labels_value.pt")
         
         train_features_raw = train_features
         train_features = train_features.permute(1, 0).contiguous()
@@ -93,12 +101,22 @@ class KMeansSegmentator(_BaseSegmentator):
         # fit clusters, i.e. get centroids (embed_dim, k)
         if self.fit_clusters:
             print("\nFitting clusters...")
-            self.kmeans.fit(train_features)
-            torch.save(self.centroids, 'cluster_centroids_query.pt')
+
+            if self.feature == "key":
+                self.kmeans.fit(train_features)
+                torch.save(self.centroids, 'cluster_centroids_key.pt')
+            elif self.feature == "value":
+                self.kmeans.fit(train_features)
+                torch.save(self.centroids, 'cluster_centroids_value.pt')
             print("\nCluster centroids saved as cluster_centroids.pt")
         else:
             print("\nUsing previously fitted clusters(cluster_centroids.pt)")
-            loaded_centroids = torch.load('cluster_centroids_query.pt')
+            
+            if self.feature == "key":
+                loaded_centroids = torch.load('cluster_centroids_key.pt')
+            elif self.feature == "value":
+                loaded_centroids = torch.load('cluster_centroids_value.pt')
+
             self.kmeans.n_redo = 1
             self.kmeans.max_iter = 300
             self.kmeans.fit(train_features, loaded_centroids)
