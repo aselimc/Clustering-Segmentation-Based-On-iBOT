@@ -156,7 +156,7 @@ class KMeansSegmentator(_BaseSegmentator):
             train_labels = F.one_hot(train_labels, self.num_classes)
         """
 
-        # label clusters
+        """# label clusters
         print("Assigning cluster labels...")
         self.cluster_labels = []
         cluster_assignment = self.kmeans.predict(train_features)
@@ -208,7 +208,19 @@ class KMeansSegmentator(_BaseSegmentator):
             
             self.cluster_labels.append(label)
 
-        self.cluster_labels = torch.stack(self.cluster_labels, dim=1).unsqueeze(0).unsqueeze(0)
+        self.cluster_labels = torch.stack(self.cluster_labels, dim=1).unsqueeze(0).unsqueeze(0)"""
+        if self.feature == "key":
+           self.cluster_labels = torch.load("cluster_labels_key.pt")
+           print("\nUsing pre-computed cluster labels cluster_labels_key.pt")
+        elif self.feature == "value":
+           self.cluster_labels = torch.load("cluster_labels_value.pt")
+           print("\nUsing pre-computed cluster labels cluster_labels_value.pt")
+        elif self.feature == "query":
+           self.cluster_labels = torch.load("cluster_labels_query.pt")
+           print("\nUsing pre-computed cluster labels cluster_labels_query.pt")
+        elif self.feature == "intermediate":
+           self.cluster_labels = torch.load("cluster_labels_intermediate.pt")
+           print("\nUsing pre-computed cluster labels cluster_labels_intermediate.pt")
 
     def _label_equal(self, label):
         labelled_data_idx = []
