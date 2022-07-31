@@ -151,6 +151,7 @@ class KMeansSegmentator(_BaseSegmentator):
 
         if self.percentage == 1.0:
             train_labels = torch.load("train_labels_one_hot.pt")
+            print("\nUsing one hot encoded train labels from train_labels_one_hot.pt")
         else:   
             train_labels = F.one_hot(train_labels, self.num_classes)
 
