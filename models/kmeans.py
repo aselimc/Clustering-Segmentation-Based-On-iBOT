@@ -149,21 +149,44 @@ class KMeansSegmentator(_BaseSegmentator):
         train_features = train_features[:, :num_samples]
         train_labels = train_labels[:num_samples]
 
-        if self.percentage == 1.0:
+        """if self.percentage == 1.0:
             train_labels = torch.load("train_labels_one_hot.pt")
             print("\nUsing one hot encoded train labels from train_labels_one_hot.pt")
         else:   
             train_labels = F.one_hot(train_labels, self.num_classes)
-
+        """
 
         # label clusters
         print("Assigning cluster labels...")
         self.cluster_labels = []
         cluster_assignment = self.kmeans.predict(train_features)
+        
         train_features = train_features.to(device=self.device)
-        train_labels = train_labels.to(device=self.device)
+        #train_labels = train_labels.to(device=self.device)
 
         similarities = self._similarity(train_features, self.centroids.to(device=self.device))
+
+        if self.feature == "key":
+            torch.save(cluster_assignment, "cluster_assignment_key.pt")
+            print("\nCluster assignment saved")
+            torch.save(similarities, "similarities_key.pt")
+            print("\nSimilarities saved")
+        elif self.feature == "value":
+            torch.save(cluster_assignment, "cluster_assignment_value.pt")
+            print("\nCluster assignment saved")
+            torch.save(similarities, "similarities_value.pt")
+            print("\nSimilarities saved")
+        elif self.feature == "query":
+            torch.save(cluster_assignment, "cluster_assignment_query.pt")
+            print("\nCluster assignment saved")
+            torch.save(similarities, "similarities_query.pt")
+            print("\nSimilarities saved")
+        elif self.feature == "intermediate":
+            torch.save(cluster_assignment, "cluster_assignment_intermediate.pt")
+            print("\nCluster assignment saved")
+            torch.save(similarities, "similarities_intermediate.pt")
+            print("\nSimilarities saved. FINISHED...")
+
         for idx in range(self.k):
             assigned_train_labels = train_labels[cluster_assignment == idx]
 
