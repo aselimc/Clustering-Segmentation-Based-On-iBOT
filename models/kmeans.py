@@ -147,8 +147,12 @@ class KMeansSegmentator(_BaseSegmentator):
         # allow only percentage of labels (simulating dataset with small number of labels)
         num_samples = int(train_features.size(1) * self.percentage)
         train_features = train_features[:, :num_samples]
-        train_labels = train_labels[:num_samples]        
-        train_labels = F.one_hot(train_labels, self.num_classes)
+        train_labels = train_labels[:num_samples]
+
+        if self.percentage == 1.0:
+            train_labels = torch.load("train_labels_one_hot.pt")
+        else:   
+            train_labels = F.one_hot(train_labels, self.num_classes)
 
 
         # label clusters
