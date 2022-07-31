@@ -210,16 +210,16 @@ class KMeansSegmentator(_BaseSegmentator):
 
         self.cluster_labels = torch.stack(self.cluster_labels, dim=1).unsqueeze(0).unsqueeze(0)"""
         if self.feature == "key":
-           self.cluster_labels = torch.load("cluster_labels_key.pt")
+           self.cluster_labels = torch.load("cluster_labels_key.pt").cuda()
            print("\nUsing pre-computed cluster labels cluster_labels_key.pt")
         elif self.feature == "value":
-           self.cluster_labels = torch.load("cluster_labels_value.pt")
+           self.cluster_labels = torch.load("cluster_labels_value.pt").cuda()
            print("\nUsing pre-computed cluster labels cluster_labels_value.pt")
         elif self.feature == "query":
-           self.cluster_labels = torch.load("cluster_labels_query.pt")
+           self.cluster_labels = torch.load("cluster_labels_query.pt").cuda()
            print("\nUsing pre-computed cluster labels cluster_labels_query.pt")
         elif self.feature == "intermediate":
-           self.cluster_labels = torch.load("cluster_labels_intermediate.pt")
+           self.cluster_labels = torch.load("cluster_labels_intermediate.pt").cuda()
            print("\nUsing pre-computed cluster labels cluster_labels_intermediate.pt")
 
     def _label_equal(self, label):
