@@ -3,7 +3,7 @@ import argparse
 from torch.utils.data import DataLoader
 from torchvision import datasets
 
-from dataloader import PartialDatasetVOC
+from utils.dataloader import PartialDatasetVOC
 from utils.logger import WBLogger
 import models
 from models.linear import LinearSegmentator

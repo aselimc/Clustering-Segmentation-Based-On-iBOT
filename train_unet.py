@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets
 from tqdm import tqdm
 
-from dataloader import PartialDatasetVOC
+from utils.dataloader import PartialDatasetVOC
 from utils.logger import WBLogger
 import models
 from models.classifier import UNet

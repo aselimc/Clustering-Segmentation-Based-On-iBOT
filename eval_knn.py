@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets
 from tqdm import tqdm
 
-from dataloader import PartialDatasetVOC
+from utils.dataloader import PartialDatasetVOC
 import models
 from models.knn import KNNSegmentator
 from utils.logger import WBLogger
