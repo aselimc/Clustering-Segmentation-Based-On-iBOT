@@ -211,40 +211,40 @@ KMeans
   <tr>
     <td>ViT-Base</td>
     <td></td>
+    <td>0.440</td>
+    <td>0.477</td>
+    <td>0.480</td>
     <td></td>
+    <td>0.324</td>
+    <td>0.332</td>
+    <td>0.341</td>
     <td></td>
+    <td>0.358</td>
+    <td>0.381</td>
+    <td>0.395</td>
     <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
+    <td>0.415</td>
+    <td>0.453</td>
+    <td>0.450</td>
   </tr>
   <tr>
     <td>ViT-Large</td>
     <td></td>
+    <td>0.475</td>
+    <td>0.505</td>
+    <td>0.512</td>
     <td></td>
+    <td>0.434</td>
+    <td>0.457</td>
+    <td>0.462</td>
     <td></td>
+    <td>0.449</td>
+    <td>0.469</td>
+    <td>0.472</td>
     <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
+    <td>0.449</td>
+    <td>0.457</td>
+    <td>0.467</td>
   </tr>
 </table>
 
