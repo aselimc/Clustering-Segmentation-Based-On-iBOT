@@ -157,7 +157,7 @@ class KMeansSegmentator(_BaseSegmentator):
         """
 
         # label clusters
-        print("Assigning cluster labels...")
+        """print("Assigning cluster labels...")
         self.cluster_labels = []
         cluster_assignment = self.kmeans.predict(train_features)
         
@@ -187,7 +187,7 @@ class KMeansSegmentator(_BaseSegmentator):
             torch.save(similarities, "similarities_intermediate.pt")
             print("\nSimilarities saved. FINISHED...")
 
-        """for idx in range(self.k):
+        for idx in range(self.k):
             assigned_train_labels = train_labels[cluster_assignment == idx]
 
             # assign background to clusters with no labeled data
