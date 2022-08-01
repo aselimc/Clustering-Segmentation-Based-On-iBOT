@@ -164,7 +164,7 @@ KNN
   </tr>
 </table>
 
-KMeans
+K-Means
 <table>
   <tr>
     <td>Arch</td>
