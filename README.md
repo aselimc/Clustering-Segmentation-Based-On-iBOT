@@ -56,61 +56,52 @@ Linear Probing
 <table>
   <tr>
     <td>Arch</td>
-    <td colspan=4 align="center">Intermediate</td>
-    <td colspan=4 align="center">Query</td>
-    <td colspan=4 align="center">Key</td>
-    <td colspan=4 align="center">Value</td>
+    <td colspan=3 align="center">Intermediate</td>
+    <td colspan=3 align="center">Query</td>
+    <td colspan=3 align="center">Key</td>
+    <td colspan=3 align="center">Value</td>
   </tr>
   <tr>
     <td></td>
-    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
-    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
-    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
-    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
   </tr>
   <tr>
     <td>ViT-Base</td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
+    <td>0.520</td>
+    <td>0.623</td>
+    <td>0.654</td>
+    <td>0.409</td>
+    <td>0.562</td>
+    <td>0.603</td>
+    <td>0.289</td>
+    <td>0.293</td>
+    <td>0.364</td>
+    <td>0.408</td>
+    <td>0.527</td>
+    <td>0.577</td>
   </tr>
   <tr>
     <td>ViT-Large</td>
-    <td>0.237</td>
     <td>0.517</td>
     <td>0.655</td>
     <td>0.675</td>
-    <td>0.171</td>
     <td>0.462</td>
     <td>0.603</td>
     <td>0.619</td>
-    <td>0.200</td>
     <td>0.322</td>
     <td>0.450</td>
     <td>0.448</td>
-    <td>0.205</td>
     <td>0.478</td>
     <td>0.615</td>
     <td>0.637</td>
@@ -121,61 +112,52 @@ KNN
 <table>
   <tr>
     <td>Arch</td>
-    <td colspan=4 align="center">Intermediate</td>
-    <td colspan=4 align="center">Query</td>
-    <td colspan=4 align="center">Key</td>
-    <td colspan=4 align="center">Value</td>
+    <td colspan=3 align="center">Intermediate</td>
+    <td colspan=3 align="center">Query</td>
+    <td colspan=3 align="center">Key</td>
+    <td colspan=3 align="center">Value</td>
   </tr>
   <tr>
     <td></td>
-    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
-    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
-    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
-    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
   </tr>
   <tr>
     <td>ViT-Base</td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
+    <td>0.460</td>
+    <td>0.528</td>
+    <td>0.544</td>
+    <td>0.357</td>
+    <td>0.450</td>
+    <td>0.474</td>
+    <td>0.296</td>
+    <td>0.389</td>
+    <td>0.398</td>
+    <td>0.432</td>
+    <td>0.488</td>
+    <td>0.502</td>
   </tr>
   <tr>
     <td>ViT-Large</td>
-    <td>0.288</td>
     <td>0.511</td>
     <td>0.580</td>
     <td>0.601</td>
-    <td>0.214</td>
     <td>0.451</td>
     <td>0.544</td>
     <td>0.575</td>
-    <td>0.237</td>
     <td>0.454</td>
     <td>0.540</td>
     <td>0.559</td>
-    <td>0.258</td>
     <td>0.477</td>
     <td>0.551</td>
     <td>0.574</td>
@@ -186,64 +168,52 @@ KMeans
 <table>
   <tr>
     <td>Arch</td>
-    <td colspan=4 align="center">Intermediate</td>
-    <td colspan=4 align="center">Query</td>
-    <td colspan=4 align="center">Key</td>
-    <td colspan=4 align="center">Value</td>
+    <td colspan=3 align="center">Intermediate</td>
+    <td colspan=3 align="center">Query</td>
+    <td colspan=3 align="center">Key</td>
+    <td colspan=3 align="center">Value</td>
   </tr>
   <tr>
     <td></td>
-    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
-    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
-    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
-    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
   </tr>
   <tr>
     <td>ViT-Base</td>
-    <td></td>
     <td>0.440</td>
     <td>0.477</td>
     <td>0.480</td>
-    <td></td>
     <td>0.324</td>
     <td>0.332</td>
     <td>0.341</td>
-    <td></td>
     <td>0.358</td>
     <td>0.381</td>
     <td>0.395</td>
-    <td></td>
     <td>0.415</td>
     <td>0.453</td>
     <td>0.450</td>
   </tr>
   <tr>
     <td>ViT-Large</td>
-    <td></td>
     <td>0.475</td>
     <td>0.505</td>
     <td>0.512</td>
-    <td></td>
     <td>0.434</td>
     <td>0.457</td>
     <td>0.462</td>
-    <td></td>
     <td>0.449</td>
     <td>0.469</td>
     <td>0.472</td>
-    <td></td>
     <td>0.449</td>
     <td>0.457</td>
     <td>0.467</td>
@@ -254,64 +224,52 @@ Agglomerative Clustering
 <table>
   <tr>
     <td>Arch</td>
-    <td colspan=4 align="center">Intermediate</td>
-    <td colspan=4 align="center">Query</td>
-    <td colspan=4 align="center">Key</td>
-    <td colspan=4 align="center">Value</td>
+    <td colspan=3 align="center">Intermediate</td>
+    <td colspan=3 align="center">Query</td>
+    <td colspan=3 align="center">Key</td>
+    <td colspan=3 align="center">Value</td>
   </tr>
   <tr>
     <td></td>
-    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
-    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
-    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
-    <td>1%</td>
     <td>10%</td>
     <td>50%</td>
     <td>100%</td>
   </tr>
   <tr>
     <td>ViT-Base</td>
-    <td></td>
-    <td></td>
+    <td>0.483</td>
     <td>0.483</td>
     <td>0.509</td>
-    <td></td>
-    <td></td>
-    <td></td>
     <td>0.357</td>
-    <td></td>
-    <td></td>
-    <td></td>
+    <td>0.339</td>
+    <td>0.357</td>
+    <td>0.391</td>
+    <td>0.380</td>
     <td>0.395</td>
-    <td></td>
-    <td></td>
-    <td></td>
+    <td>0.426</td>
+    <td>0.447</td>
     <td>0.454</td>
   </tr>
   <tr>
     <td>ViT-Large</td>
-    <td></td>
     <td>0.506</td>
     <td>0.511</td>
     <td>0.537</td>
-    <td></td>
     <td>0.402</td>
     <td>0.414</td>
     <td>0.417</td>
-    <td></td>
     <td>0.406</td>
     <td>0.436</td>
     <td>0.451</td>
-    <td></td>
     <td>0.445</td>
     <td>0.463</td>
     <td>0.486</td>
