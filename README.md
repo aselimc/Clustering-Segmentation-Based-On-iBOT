@@ -108,7 +108,7 @@ Linear Probing
   </tr>
 </table>
 
-KNN
+K-Nearest Neighbor
 <table>
   <tr>
     <td>Arch</td>
