@@ -2,7 +2,9 @@
 Studying well-structuredness of 
 <a href="https://github.com/bytedance/ibot">iBOT's</a> learned feature space using 
 Linear Probing, K-Nearest Neighbors, K-Means and Agglomerative Clustering.
+<p align="center">
 <img src=".github/Clustering_Segmentation_Overview.svg" alt="Clustering Segmentation">
+<p>
 
 ## Installation
 System Requirements:
