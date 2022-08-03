@@ -74,7 +74,7 @@ def parser_args():
     parser.add_argument('--n_blocks', type=int, default=1)
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument("--percentage", type=float, default=0.1)
-    parser.add_argument("--background_label_percentage", type=float, default=0.2)
+    parser.add_argument("--background_label_percentage", type=float, default=1.0)
     parser.add_argument("--segmentation", type=str, choices=['binary', 'multi'], default='multi')
     parser.add_argument("--temperature", type=float, default=1.0)
     parser.add_argument("--eval_freq", type=int, default=5)
