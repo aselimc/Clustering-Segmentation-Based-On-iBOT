@@ -34,7 +34,7 @@ def main(args):
                 n_chunks=args.n_chunks,
                 feature=args.feature,
                 n_blocks=args.n_blocks,
-                use_cuda=True,
+                use_cuda=args.use_cuda,
                 patch_labeling=args.patch_labeling,
                 num_classes=21,
                 distance=args.distance,
@@ -54,7 +54,7 @@ def main(args):
           + [_transforms.MergeContours()]
     )
 
-    train_dataset = PartialDatasetVOC(percentage = args.percentage, root=args.root, image_set='train', download=False, transforms=transform)
+    train_dataset = PartialDatasetVOC(percentage = args.percentage, root=args.root, image_set='train', download=True, transforms=transform)
     train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.workers)
     val_dataset = datasets.VOCSegmentation(root=args.root, image_set='val', download=False, transforms=transform)
     val_loader = DataLoader(val_dataset, batch_size=args.batch_size)
@@ -85,9 +85,10 @@ def parser_args():
     parser.add_argument("--segmentation", type=str, choices=['binary', 'multi'], default='multi')
     parser.add_argument("--eval_freq", type=int, default=5)
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument('--n_chunks', type=int, default=7)
+    parser.add_argument('--n_chunks', type=int, default=5)
     parser.add_argument('--smooth_mask', type=bool, default=True)
-    parser.add_argument('--n_clusters', type=int, default=300)
+    parser.add_argument('--use_cuda', type=bool, default=False)
+    parser.add_argument('--n_clusters', type=int, default=400)
     parser.add_argument('--fit_clusters', type=bool, default=True)
     parser.add_argument('--linkage', type=str, choices=['ward', 'average', 'single', 'maximum'], default='ward')
     parser.add_argument('--fit_only_labelled', type=bool, default=False)
