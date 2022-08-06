@@ -46,7 +46,7 @@ class AgglomerativeSegmentator(_BaseSegmentator):
     
     @torch.no_grad()
     def score(self, loader):
-        print("Evaluating on different chunks")
+        print("Evaluating on different chunks\n")
         progress_bar = tqdm(total=len(loader))
         top1 = []
 
@@ -147,8 +147,7 @@ class AgglomerativeSegmentator(_BaseSegmentator):
             model = self.model.fit(feature[ldi])
         else:
             model = self.model.fit(feature)
-        cluster_data_labels = self._label_cluster(model, label, ldi)
-        cluster_centroids = self._get_cluster_centroids(model, feature)
+        cluster_centroids, cluster_data_labels = self._get_cluster_centroids_and_labels(model, label, feature, ldi)
         del model
         del label
         del ldi
@@ -157,15 +156,11 @@ class AgglomerativeSegmentator(_BaseSegmentator):
 
    
 
-    def _get_cluster_centroids(self, model, feature):
+    def _get_cluster_centroids_and_labels(self, model, label, feature, ldi):
         cluster_centroids = []
-        for i in range(self.n_clusters):
-            cluster_centroids.append(np.mean(np.array(feature[np.where(i==model.labels_)]), axis=0))
-        return np.array(cluster_centroids)
-
-    def _label_cluster(self, model, label, ldi):
         cluster_data_labels = np.zeros(shape=(self.n_clusters,), dtype=int)
         for i in range(self.n_clusters):
+            cluster_centroids.append(np.mean(np.array(feature[np.where(i==model.labels_)]), axis=0))
             # Get the all data index that is inside this cluster
             idx_cluster = np.where(i==model.labels_)
             # Get these the ones where these indexes are labelled
@@ -179,8 +174,8 @@ class AgglomerativeSegmentator(_BaseSegmentator):
             # # Now assign all datapoints that are inside this cluster as cluster label
             # cluster_data_labels[idx_cluster] = cluster_label
             cluster_data_labels[i] = cluster_label
-        return cluster_data_labels
-        
+        return np.array(cluster_centroids), cluster_data_labels
+
     def _label_equal(self, label):
         labelled_data_idx = []
         previous_added_idx = []

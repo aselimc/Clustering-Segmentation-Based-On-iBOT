@@ -1,6 +1,8 @@
 import argparse
+from sklearn.utils import shuffle
 
-from torch.utils.data import DataLoader
+import torch
+from torch.utils.data import DataLoader, WeightedRandomSampler
 from torchvision import datasets
 
 from utils.dataloader import PartialDatasetVOC
@@ -70,7 +72,7 @@ def parser_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--root', type=str, default="data/VOCtrainval_11-May-2012")
     parser.add_argument('--weights', type=str, default="weights/checkpoint.pth")
-    parser.add_argument('--arch', type=str, default="vit_base")
+    parser.add_argument('--arch', type=str, default="vit_large")
     parser.add_argument('--feature', type=str, choices=['intermediate', 'query', 'key', 'value'],
                         default='intermediate')
     parser.add_argument('--patch_size', type=int, default=16)
@@ -83,10 +85,10 @@ def parser_args():
     parser.add_argument("--segmentation", type=str, choices=['binary', 'multi'], default='multi')
     parser.add_argument("--eval_freq", type=int, default=5)
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument('--n_chunks', type=int, default=15)
+    parser.add_argument('--n_chunks', type=int, default=7)
     parser.add_argument('--smooth_mask', type=bool, default=True)
-    parser.add_argument('--n_clusters', type=int, default=150)
-    parser.add_argument('--fit_clusters', type=bool, default=False)
+    parser.add_argument('--n_clusters', type=int, default=300)
+    parser.add_argument('--fit_clusters', type=bool, default=True)
     parser.add_argument('--linkage', type=str, choices=['ward', 'average', 'single', 'maximum'], default='ward')
     parser.add_argument('--fit_only_labelled', type=bool, default=False)
 
